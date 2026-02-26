@@ -387,6 +387,14 @@ function App() {
         addLog('⏹️ Autopilot stopped', 'warning');
     };
 
+    const colorMap = {
+        sky: { text: 'text-sky-400', bg: 'bg-sky-600', bgHover: 'hover:bg-sky-500', border: 'border-sky-500', shadow: 'shadow-sky-500' },
+        emerald: { text: 'text-emerald-400', bg: 'bg-emerald-600', bgHover: 'hover:bg-emerald-500', border: 'border-emerald-500', shadow: 'shadow-emerald-500' },
+        indigo: { text: 'text-indigo-400', bg: 'bg-indigo-600', bgHover: 'hover:bg-indigo-500', border: 'border-indigo-500', shadow: 'shadow-indigo-500' },
+        purple: { text: 'text-purple-400', bg: 'bg-purple-600', bgHover: 'hover:bg-purple-500', border: 'border-purple-500', shadow: 'shadow-purple-500' },
+        pink: { text: 'text-pink-400', bg: 'bg-pink-600', bgHover: 'hover:bg-pink-500', border: 'border-pink-500', shadow: 'shadow-pink-500' }
+    };
+
     const steps = [
         { num: 1, key: 'step1', title: "Fetch Leads", desc: "Scrape 25 states + SEC + OpenCorporates", icon: Database, color: "sky", endpoint: "/api/fetch-leads" },
         { num: 2, key: 'step2', title: "Find Domains", desc: "Discover websites via Serper Google API", icon: Globe, color: "emerald", endpoint: "/api/find-domains" },
@@ -485,7 +493,7 @@ function App() {
                         { label: 'Exported', value: stats.exported, color: 'pink' },
                     ].map((stat, i) => (
                         <div key={i} className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-4 text-center`}>
-                            <div className={`text-2xl font-bold text-${stat.color}-400`}>{stat.value}</div>
+                            <div className={`text-2xl font-bold ${colorMap[stat.color].text}`}>{stat.value}</div>
                             <div className="text-sm text-slate-400">{stat.label}</div>
                         </div>
                     ))}
@@ -884,20 +892,20 @@ function App() {
 }
 
 function StepCard({ num, title, desc, icon: Icon, color, status, isActive, onClick, disabled }) {
+    const colorMapStep = {
+        sky: { text: 'text-sky-400', bg: 'bg-sky-500', border: 'border-sky-500/50' },
+        emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500', border: 'border-emerald-500/50' },
+        indigo: { text: 'text-indigo-400', bg: 'bg-indigo-500', border: 'border-indigo-500/50' },
+        purple: { text: 'text-purple-400', bg: 'bg-purple-500', border: 'border-purple-500/50' },
+        pink: { text: 'text-pink-400', bg: 'bg-pink-500', border: 'border-pink-500/50' }
+    };
+
     const getStatusStyle = () => {
         if (status === 'loading') return 'border-blue-500 shadow-blue-500/30 shadow-lg';
         if (status === 'success') return 'border-green-500 shadow-green-500/30 shadow-lg';
         if (status === 'error') return 'border-red-500 shadow-red-500/30 shadow-lg';
-        if (isActive) return `border-${color}-500/50`;
+        if (isActive) return `${colorMapStep[color].border}`;
         return 'border-slate-700 hover:border-slate-500';
-    };
-
-    const colorMap = {
-        sky: 'text-sky-400',
-        emerald: 'text-emerald-400',
-        indigo: 'text-indigo-400',
-        purple: 'text-purple-400',
-        pink: 'text-pink-400'
     };
 
     return (
@@ -908,12 +916,12 @@ function StepCard({ num, title, desc, icon: Icon, color, status, isActive, onCli
             onClick={!disabled && status !== 'loading' ? onClick : undefined}
         >
             {/* Step Number Badge */}
-            <div className={`absolute -top-2 -left-2 w-7 h-7 rounded-full bg-${color}-500 flex items-center justify-center text-sm font-bold text-white shadow-lg`}>
+            <div className={`absolute -top-2 -left-2 w-7 h-7 rounded-full ${colorMapStep[color].bg} flex items-center justify-center text-sm font-bold text-white shadow-lg`}>
                 {num}
             </div>
 
             <div className="flex items-start justify-between mb-3">
-                <Icon className={`w-7 h-7 ${colorMap[color]}`} />
+                <Icon className={`w-7 h-7 ${colorMapStep[color].text}`} />
                 {status === 'loading' && <Loader2 className="w-5 h-5 animate-spin text-blue-400" />}
                 {status === 'success' && <CheckCircle className="w-5 h-5 text-green-400" />}
                 {status === 'error' && <AlertCircle className="w-5 h-5 text-red-400" />}
@@ -925,8 +933,8 @@ function StepCard({ num, title, desc, icon: Icon, color, status, isActive, onCli
             <button
                 disabled={disabled || status === 'loading'}
                 className={`w-full py-2 px-3 rounded-lg font-medium text-sm transition-colors ${status === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                    status === 'error' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                        `bg-${color}-600 hover:bg-${color}-500 text-white`
+                        status === 'error' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                            `${colorMapStep[color].bg} hover:opacity-90 text-white`
                     } disabled:bg-slate-700 disabled:text-slate-500`}
             >
                 {status === 'loading' ? 'Running...' : status === 'success' ? 'Done ✓' : status === 'error' ? 'Retry' : 'Run'}

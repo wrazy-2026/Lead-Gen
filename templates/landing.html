@@ -147,16 +147,19 @@
 
         html,
         body {
-            height: 100%;
             width: 100%;
             margin: 0;
             padding: 0;
             background-color: #0a0a15;
+            scroll-behavior: smooth;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         .hero-title {
@@ -171,7 +174,8 @@
             top: 0;
             left: 0;
             z-index: 1;
-            pointer-events: auto;
+            pointer-events: none;
+            overflow: hidden;
         }
 
         /* Lighting effect gradient blobs */
@@ -179,9 +183,10 @@
             position: fixed;
             border-radius: 50%;
             filter: blur(80px);
-            opacity: 0.5;
+            opacity: 0.3;
             z-index: 0;
             animation: blobFloat 8s ease-in-out infinite;
+            pointer-events: none;
         }
 
         .lighting-blob-pink {
@@ -487,7 +492,7 @@
     </style>
 </head>
 
-<body class="h-full w-full min-h-screen bg-[#0a0a15] text-white overflow-x-hidden">
+<body class="min-h-screen w-full bg-[#0a0a15] text-white">
     <!-- Lighting Effect Gradient Blobs -->
     <div class="lighting-blob lighting-blob-pink"></div>
     <div class="lighting-blob lighting-blob-blue"></div>
@@ -609,7 +614,7 @@
                     class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
                     <button onclick="googleSignIn()"
                         class="btn-glow px-10 py-4 rounded-2xl text-lg font-bold flex items-center space-x-3 glow-pink">
-                        <svg class="w-6 h-6" viewBox="0 0 24 24">
+                        <svg class="w-6 h-6" width="24" height="24" viewBox="0 0 24 24">
                             <path fill="currentColor"
                                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                             <path fill="currentColor"

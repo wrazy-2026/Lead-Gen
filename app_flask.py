@@ -114,8 +114,9 @@ def add_security_headers(response):
     """Add security headers to support Firebase popup authentication."""
     # Allow Firebase popup auth by using COOP: same-origin-allow-popups
     response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
-    # Enable cross-origin resource sharing for Firebase
-    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    # COEP: require-corp can block external CDN scripts like Tailwind/Google Fonts 
+    # if they don't explicitly send the CORP header.
+    # response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
     return response
 
 # Database instance
