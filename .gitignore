@@ -34,6 +34,8 @@ wheels/
 credentials.json
 sheets-exporter-key.json
 *-key.json
+*-firebase-adminsdk-*.json
+*.json
 
 # Frontend
 **/node_modules/

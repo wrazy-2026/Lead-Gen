@@ -39,7 +39,7 @@ from google_sheets import GoogleSheetsExporter, MockGoogleSheetsExporter, Google
 from scrapers.real_scrapers import get_real_scraper, get_available_states, OpenCorporatesScraper, SECEdgarScraper
 from enrichment import get_enricher, BusinessEnricher, ApifySkipTraceEnricher
 from serper_service import SerperService, get_serper_service, detect_business_category
-from auth import init_oauth, User, admin_required, login_required_custom, oauth, ADMIN_EMAIL
+from auth import init_oauth, User, admin_required, login_required_custom, oauth, ADMIN_EMAIL, verify_and_login_firebase
 from state_urls import STATE_URLS
 
 
@@ -366,6 +366,34 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('landing'))
+
+
+@app.route('/api/auth/firebase', methods=['POST'])
+def firebase_login():
+    """Handle Firebase login from frontend."""
+    try:
+        data = request.json
+        id_token = data.get('idToken')
+        
+        if not id_token:
+            return jsonify({'success': False, 'error': 'No ID token provided'}), 400
+            
+        user = verify_and_login_firebase(id_token)
+        if user:
+            return jsonify({
+                'success': True,
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'name': user.name,
+                    'is_admin': user.is_admin
+                }
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Invalid Firebase token'}), 401
+    except Exception as e:
+        print(f"Firebase Login API Error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/auth/google-one-tap', methods=['POST'])

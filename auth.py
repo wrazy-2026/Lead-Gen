@@ -10,9 +10,11 @@ import os
 from datetime import datetime
 from functools import wraps
 from flask import redirect, url_for, flash, session
-from flask_login import LoginManager, UserMixin, current_user
+from flask_login import LoginManager, UserMixin, current_user, login_user
 from authlib.integrations.flask_client import OAuth
 from database import get_database
+import firebase_admin
+from firebase_admin import credentials, auth as firebase_auth
 
 # ============================================================================
 # CONFIGURATION
@@ -40,16 +42,17 @@ class User(UserMixin):
     
     @staticmethod
     def get(user_id):
-        """Get user by ID from database."""
+        """Get user by ID."""
         db = get_database()
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            # Prepare SQL for safe execution
-            sql = "SELECT * FROM users WHERE id = ?"
-            cursor.execute(db.prepare_sql(sql), (user_id,))
-            if db.db_type == 'sqlite':
-                row = cursor.fetchone()
-            else:
+        
+        # Check if Firestore
+        if hasattr(db, 'get_user_by_id'):
+            row = db.get_user_by_id(user_id)
+        else:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                sql = "SELECT * FROM users WHERE id = ?"
+                cursor.execute(db.prepare_sql(sql), (user_id,))
                 row = cursor.fetchone()
                 
         if row:
@@ -66,13 +69,17 @@ class User(UserMixin):
 
     @staticmethod
     def get_by_email(email):
-        """Get user by email from database."""
+        """Get user by email."""
         db = get_database()
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            sql = "SELECT * FROM users WHERE email = ?"
-            cursor.execute(db.prepare_sql(sql), (email,))
-            row = cursor.fetchone()
+        
+        if hasattr(db, 'get_user_by_email'):
+            row = db.get_user_by_email(email)
+        else:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                sql = "SELECT * FROM users WHERE email = ?"
+                cursor.execute(db.prepare_sql(sql), (email,))
+                row = cursor.fetchone()
         
         if row:
             return User(
@@ -88,59 +95,42 @@ class User(UserMixin):
     
     @staticmethod
     def create_or_update(email, name, picture=None):
-        """Create or update user in database."""
-        # Use Python boolean for Postgres compatibility (psycopg2 adapts True -> true/1, False -> false/0)
+        """Create or update user."""
         is_admin = (email.lower() == ADMIN_EMAIL.lower())
-        now = datetime.now().isoformat()
-        
         db = get_database()
-        try:
-            with db.get_connection() as conn:
-                cursor = conn.cursor()
-                
-                # Check if user exists
-                sql = "SELECT id FROM users WHERE email = ?"
-                cursor.execute(db.prepare_sql(sql), (email,))
-                existing = cursor.fetchone()
-                
-                if existing:
-                    # Update existing user
-                    update_sql = """
-                        UPDATE users 
-                        SET name = ?, picture = ?, is_admin = ?, last_login = ?
-                        WHERE email = ?
-                    """
-                    cursor.execute(db.prepare_sql(update_sql), (name, picture, is_admin, now, email))
-                    # Handle return value based on db type/cursor
-                    if isinstance(existing, dict): # MySQL/Postgres (RealDictCursor)
-                        user_id = existing['id']
-                    else: # SQLite
-                        user_id = existing['id'] 
-                else:
-                    # Create new user
-                    insert_sql = """
-                        INSERT INTO users (email, name, picture, is_admin, created_at, last_login)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    """
-                    prepared_sql = db.prepare_sql(insert_sql)
+        
+        if hasattr(db, 'create_or_update_user'):
+            user_id = db.create_or_update_user(email, name, picture, is_admin)
+        else:
+            now = datetime.now().isoformat()
+            try:
+                with db.get_connection() as conn:
+                    cursor = conn.cursor()
+                    sql = "SELECT id FROM users WHERE email = ?"
+                    cursor.execute(db.prepare_sql(sql), (email,))
+                    existing = cursor.fetchone()
                     
-                    if db.db_type == 'postgres':
-                        cursor.execute(prepared_sql + " RETURNING id", (email, name, picture, is_admin, now, now))
-                        row = cursor.fetchone()
-                        user_id = row['id'] if row else None
+                    if existing:
+                        update_sql = "UPDATE users SET name = ?, picture = ?, is_admin = ?, last_login = ? WHERE email = ?"
+                        cursor.execute(db.prepare_sql(update_sql), (name, picture, is_admin, now, email))
+                        user_id = existing['id']
                     else:
-                        cursor.execute(prepared_sql, (email, name, picture, is_admin, now, now))
-                        user_id = cursor.lastrowid
+                        insert_sql = "INSERT INTO users (email, name, picture, is_admin, created_at, last_login) VALUES (?, ?, ?, ?, ?, ?)"
+                        prepared_sql = db.prepare_sql(insert_sql)
+                        if db.db_type == 'postgres':
+                            cursor.execute(prepared_sql + " RETURNING id", (email, name, picture, is_admin, now, now))
+                            row = cursor.fetchone()
+                            user_id = row['id'] if row else None
+                        else:
+                            cursor.execute(prepared_sql, (email, name, picture, is_admin, now, now))
+                            user_id = cursor.lastrowid
+            except Exception as e:
+                print(f"Error in create_or_update: {e}")
+                return None
             
-            if user_id:
-                return User.get(user_id)
-            return None
-            
-        except Exception as e:
-            print(f"Auth Error (create_or_update): {e}")
-            import traceback
-            traceback.print_exc()
-            return None
+        if user_id:
+            return User.get(user_id)
+        return None
     
     @staticmethod
     def get_all_users():
@@ -216,9 +206,43 @@ def init_oauth(app):
             'scope': 'openid email profile'
         }
     )
-    
+
+    # Initialize Firebase Admin
+    if not firebase_admin._apps:
+        # Look for the specific JSON file provided by the user
+        cred_path = 'lively-paratext-487716-r8-firebase-adminsdk-fbsvc-8406fdde9d.json'
+        if os.path.exists(cred_path):
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+        else:
+            # Fallback (maybe env var)
+            try:
+                firebase_admin.initialize_app()
+            except Exception as e:
+                print(f"Firebase Init Error: {e}")
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.get(user_id)
     
     return oauth
+
+def verify_and_login_firebase(id_token):
+    """Verify Firebase ID token and login user if valid."""
+    try:
+        decoded_token = firebase_auth.verify_id_token(id_token)
+        email = decoded_token.get('email')
+        name = decoded_token.get('name', 'Firebase User')
+        picture = decoded_token.get('picture')
+        
+        if not email:
+            return None
+            
+        user = User.create_or_update(email, name, picture)
+        if user:
+            login_user(user)
+            return user
+        return None
+    except Exception as e:
+        print(f"Firebase Token Verification Error: {e}")
+        return None

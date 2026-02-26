@@ -23,9 +23,163 @@ import logging
 from contextlib import contextmanager
 
 from scrapers.base_scraper import BusinessRecord
+from google.cloud import firestore
+import firebase_admin
+from firebase_admin import credentials, firestore as firebase_firestore
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+
+class FirestoreDatabase:
+    """Database interface for Google Cloud Firestore."""
+    def __init__(self, project_id=None):
+        self.project_id = project_id or os.environ.get('GOOGLE_CLOUD_PROJECT')
+        self.db = firebase_firestore.client()
+        logger.info(f"Initialized Firestore Database for project: {self.db.project}")
+
+    def create_tables(self):
+        """Firestore is schemaless, but we can ensure collections exist."""
+        pass
+
+    def save_lead(self, lead_data: dict):
+        """Save a single lead to Firestore."""
+        try:
+            # Use business_name and state as a unique key if possible
+            doc_id = f"{lead_data.get('state', 'XX')}_{lead_data.get('business_name', 'Unknown').replace(' ', '_')}"
+            doc_ref = self.db.collection('leads').document(doc_id)
+            doc_ref.set(lead_data, merge=True)
+            return True
+        except Exception as e:
+            logger.error(f"Error saving lead to Firestore: {e}")
+            return False
+
+    def save_leads(self, leads_df):
+        """Save multiple leads from a DataFrame."""
+        if leads_df.empty:
+            return 0
+        
+        count = 0
+        records = leads_df.to_dict('records')
+        for record in records:
+            if self.save_lead(record):
+                count += 1
+        return count
+
+    def get_all_leads(self):
+        """Retrieve all leads from Firestore."""
+        try:
+            docs = self.db.collection('leads').stream()
+            leads = [doc.to_dict() for doc in docs]
+            return pd.DataFrame(leads)
+        except Exception as e:
+            logger.error(f"Error getting leads from Firestore: {e}")
+            return pd.DataFrame()
+
+    def get_lead_by_id(self, business_name, state):
+        """Retrieve a specific lead."""
+        try:
+            doc_id = f"{state}_{business_name.replace(' ', '_')}"
+            doc = self.db.collection('leads').document(doc_id).get()
+            return doc.to_dict() if doc.exists else None
+        except Exception as e:
+            logger.error(f"Error getting lead by ID: {e}")
+            return None
+
+    def search_leads(self, query=None, state=None, limit=100, offset=0):
+        """Search leads with filters."""
+        try:
+            leads_ref = self.db.collection('leads')
+            if state:
+                leads_ref = leads_ref.where('state', '==', state)
+            
+            # Simple search (prefix)
+            if query:
+                leads_ref = leads_ref.where('business_name', '>=', query).where('business_name', '<=', query + '\uf8ff')
+            
+            docs = leads_ref.limit(limit).offset(offset).stream()
+            leads = [doc.to_dict() for doc in docs]
+            return pd.DataFrame(leads), len(leads) # Note: Firestore count is expensive, returning current batch length
+        except Exception as e:
+            logger.error(f"Error searching leads: {e}")
+            return pd.DataFrame(), 0
+
+    def get_user_by_email(self, email):
+        """Get user by email from Firestore."""
+        try:
+            docs = self.db.collection('users').where('email', '==', email).limit(1).stream()
+            for doc in docs:
+                user_data = doc.to_dict()
+                user_data['id'] = doc.id
+                return user_data
+            return None
+        except Exception as e:
+            logger.error(f"Error getting user by email: {e}")
+            return None
+
+    def get_user_by_id(self, user_id):
+        """Get user by ID from Firestore."""
+        try:
+            doc = self.db.collection('users').document(str(user_id)).get()
+            if doc.exists:
+                user_data = doc.to_dict()
+                user_data['id'] = doc.id
+                return user_data
+            return None
+        except Exception as e:
+            logger.error(f"Error getting user by ID: {e}")
+            return None
+
+    def create_or_update_user(self, email, name, picture=None, is_admin=False):
+        """Create or update user in Firestore."""
+        try:
+            now = datetime.now().isoformat()
+            data = {
+                'email': email,
+                'name': name,
+                'picture': picture,
+                'is_admin': is_admin,
+                'last_login': now
+            }
+            
+            # Check if exists
+            existing = self.get_user_by_email(email)
+            if existing:
+                doc_id = existing['id']
+                self.db.collection('users').document(doc_id).update(data)
+                return doc_id
+            else:
+                data['created_at'] = now
+                doc_ref = self.db.collection('users').add(data)
+                return doc_ref[1].id
+        except Exception as e:
+            logger.error(f"Error creating/updating user: {e}")
+            return None
+
+
+        except Exception as e:
+            logger.error(f"Error creating/updating user: {e}")
+            return None
+
+    def get_setting(self, key, default=None):
+        """Get system setting from Firestore."""
+        try:
+            doc = self.db.collection('settings').document(key).get()
+            if doc.exists:
+                return doc.to_dict().get('value', default)
+            return default
+        except Exception as e:
+            logger.error(f"Error getting setting {key}: {e}")
+            return default
+
+    def save_setting(self, key, value):
+        """Save system setting to Firestore."""
+        try:
+            self.db.collection('settings').document(key).set({'value': value, 'updated_at': datetime.now().isoformat()})
+            return True
+        except Exception as e:
+            logger.error(f"Error saving setting {key}: {e}")
+            return False
 
 
 class Database:
@@ -946,18 +1100,19 @@ class Database:
 _db_instance: Optional[Database] = None
 
 
-def get_database(db_path: str = None) -> Database:
+def get_database(db_path: str = None):
     """
-    Get or create the database singleton instance.
-    
-    Args:
-        db_path: Optional custom database path
-        
-    Returns:
-        Database instance
+    Get or create the database instance.
     """
     global _db_instance
     
+    # Check for Firestore first if configured in environment
+    if os.environ.get('USE_FIRESTORE') == 'true' or firebase_admin._apps:
+        try:
+            return FirestoreDatabase()
+        except Exception as e:
+            logger.error(f"Failed to initialize Firestore, falling back to SQL: {e}")
+
     if _db_instance is None or (db_path and db_path != _db_instance.db_path):
         _db_instance = Database(db_path)
     

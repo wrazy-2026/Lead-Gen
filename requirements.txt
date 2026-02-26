@@ -17,3 +17,4 @@ psycopg2-binary>=2.9.0
 flask-cors>=4.0.0
 playwright>=1.40.0
 playwright-stealth>=2.0.0
+firebase-admin>=6.4.0

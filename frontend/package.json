@@ -18,7 +18,8 @@
     "tsparticles": "^3.0.0",
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.0",
-    "lucide-react": "^0.300.0"
+    "lucide-react": "^0.300.0",
+    "firebase": "^10.8.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
