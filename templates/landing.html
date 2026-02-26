@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
@@ -139,8 +139,24 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a15;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            color: white;
         }
 
         .hero-title {
@@ -471,7 +487,7 @@
     </style>
 </head>
 
-<body class="bg-[#0a0a15] text-white overflow-x-hidden">
+<body class="h-full w-full min-h-screen bg-[#0a0a15] text-white overflow-x-hidden">
     <!-- Lighting Effect Gradient Blobs -->
     <div class="lighting-blob lighting-blob-pink"></div>
     <div class="lighting-blob lighting-blob-blue"></div>
