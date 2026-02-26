@@ -108,6 +108,16 @@ if os.environ.get('K_SERVICE'):
 # Initialize OAuth
 init_oauth(app)
 
+# Security Headers for Firebase popup auth
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to support Firebase popup authentication."""
+    # Allow Firebase popup auth by using COOP: same-origin-allow-popups
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+    # Enable cross-origin resource sharing for Firebase
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    return response
+
 # Database instance
 db = get_database("leads.db")
 
@@ -341,12 +351,15 @@ def firebase_login():
         id_token = data.get('idToken')
         
         if not id_token:
-            return jsonify({'success': False, 'error': 'No ID token provided'}), 400
+            error_msg = 'No ID token provided'
+            print(f"[Firebase Auth] {error_msg}")
+            return jsonify({'success': False, 'error': error_msg}), 400
             
         user = verify_and_login_firebase(id_token)
         if user:
             # Determine redirect
             redirect_url = url_for('admin_dashboard') if user.is_admin else url_for('client_dashboard')
+            print(f"[Firebase Auth] ✅ User logged in: {user.email} (admin={user.is_admin})")
             return jsonify({
                 'success': True,
                 'redirect': redirect_url,
@@ -358,10 +371,15 @@ def firebase_login():
                 }
             })
         else:
-            return jsonify({'success': False, 'error': 'Invalid Firebase token'}), 401
+            error_msg = 'Failed to verify Firebase token or create user - check logs'
+            print(f"[Firebase Auth] ❌ {error_msg}")
+            return jsonify({'success': False, 'error': error_msg}), 401
     except Exception as e:
-        print(f"Firebase Login API Error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        error_msg = f"Firebase Login API Error: {str(e)}"
+        print(f"[Firebase Auth] ❌ {error_msg}")
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({'success': False, 'error': error_msg}), 500
 
 
 @app.route('/auth/google-one-tap', methods=['POST'])

@@ -99,22 +99,32 @@ class User(UserMixin):
         is_admin = (email.lower() == ADMIN_EMAIL.lower())
         db = get_database()
         
-        if hasattr(db, 'create_or_update_user'):
-            user_id = db.create_or_update_user(email, name, picture, is_admin)
-        else:
-            now = datetime.now().isoformat()
-            try:
+        print(f"[User] Creating/updating user: {email} (admin={is_admin})")
+        print(f"[User] Database type: {getattr(db, 'db_type', 'unknown')}")
+        
+        try:
+            if hasattr(db, 'create_or_update_user'):
+                print(f"[User] Using Firestore backend")
+                user_id = db.create_or_update_user(email, name, picture, is_admin)
+                print(f"[User] Firestore result: user_id={user_id}")
+            else:
+                print(f"[User] Using SQL backend (type={db.db_type})")
+                now = datetime.now().isoformat()
                 with db.get_connection() as conn:
                     cursor = conn.cursor()
                     sql = "SELECT id FROM users WHERE email = ?"
-                    cursor.execute(db.prepare_sql(sql), (email,))
+                    prepared_sql = db.prepare_sql(sql)
+                    print(f"[User] Checking existing user: {email}")
+                    cursor.execute(prepared_sql, (email,))
                     existing = cursor.fetchone()
                     
                     if existing:
+                        print(f"[User] User exists, updating (id={existing['id']})")
                         update_sql = "UPDATE users SET name = ?, picture = ?, is_admin = ?, last_login = ? WHERE email = ?"
                         cursor.execute(db.prepare_sql(update_sql), (name, picture, is_admin, now, email))
                         user_id = existing['id']
                     else:
+                        print(f"[User] New user, inserting")
                         insert_sql = "INSERT INTO users (email, name, picture, is_admin, created_at, last_login) VALUES (?, ?, ?, ?, ?, ?)"
                         prepared_sql = db.prepare_sql(insert_sql)
                         if db.db_type == 'postgres':
@@ -124,9 +134,12 @@ class User(UserMixin):
                         else:
                             cursor.execute(prepared_sql, (email, name, picture, is_admin, now, now))
                             user_id = cursor.lastrowid
-            except Exception as e:
-                print(f"Error in create_or_update: {e}")
-                return None
+                    print(f"[User] SQL result: user_id={user_id}")
+        except Exception as e:
+            print(f"[User] ❌ Error in create_or_update: {type(e).__name__}: {e}")
+            import traceback
+            print(traceback.format_exc())
+            return None
             
         if user_id:
             return User.get(user_id)
@@ -221,19 +234,34 @@ def init_oauth(app):
 def verify_and_login_firebase(id_token):
     """Verify Firebase ID token and login user if valid."""
     try:
+        # Step 1: Verify the token
+        print(f"[Firebase] Verifying ID token...")
         decoded_token = firebase_auth.verify_id_token(id_token)
+        print(f"[Firebase] ✅ Token verified, payload: {decoded_token.get('email')}")
+        
+        # Extract user info
         email = decoded_token.get('email')
         name = decoded_token.get('name', 'Firebase User')
         picture = decoded_token.get('picture')
         
         if not email:
+            print(f"[Firebase] ❌ No email in token")
             return None
-            
+        
+        # Step 2: Create or update user in database
+        print(f"[Firebase] Creating/updating user in database: {email}")
         user = User.create_or_update(email, name, picture)
+        
         if user:
+            print(f"[Firebase] ✅ User created/updated: {user.email} (id={user.id}, admin={user.is_admin})")
             login_user(user)
             return user
-        return None
+        else:
+            print(f"[Firebase] ❌ Failed to create/update user in database")
+            return None
+            
     except Exception as e:
-        print(f"Firebase Token Verification Error: {e}")
+        print(f"[Firebase] ❌ Token Verification Error: {type(e).__name__}: {e}")
+        import traceback
+        print(traceback.format_exc())
         return None

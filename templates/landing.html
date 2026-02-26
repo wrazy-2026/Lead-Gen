@@ -63,27 +63,74 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
+        // Helper function to show messages
+        function showAuthMessage(message, type = 'info') {
+            const messageEl = document.getElementById('auth-message');
+            if (messageEl) {
+                messageEl.textContent = message;
+                messageEl.className = `auth-message auth-message-${type}`;
+                messageEl.style.display = 'block';
+            }
+            console.log(`[Auth ${type}] ${message}`);
+        }
+
         // Global sign-in function
         window.googleSignIn = async function () {
             try {
+                showAuthMessage('Starting Firebase authentication...', 'info');
+                const googleSignInBtn = document.getElementById('google-auth-btn');
+                if (googleSignInBtn) googleSignInBtn.disabled = true;
+
+                console.log('[Firebase Auth] Attempting signInWithPopup...');
                 const result = await signInWithPopup(auth, provider);
+                console.log('[Firebase Auth] ✅ Firebase sign-in successful');
+                showAuthMessage('Firebase login successful, getting token...', 'info');
+
                 const idToken = await result.user.getIdToken();
+                console.log('[Firebase Auth] ✅ ID token obtained');
+                showAuthMessage('Authenticating with server...', 'info');
 
                 // Submit to backend
                 const response = await fetch('/api/auth/firebase', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idToken: idToken })
+                    body: JSON.stringify({ idToken: idToken }),
+                    credentials: 'include'
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    window.location.href = data.redirect || '/admin/dashboard';
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    console.log('[Firebase Auth] ✅ Server authentication successful', data);
+                    showAuthMessage(`Welcome ${data.user.name}! Redirecting...`, 'success');
+
+                    // Add a small delay to show success message
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/dashboard';
+                    }, 500);
                 } else {
-                    console.error('Firebase Login failed');
+                    const errorMsg = data.error || 'Server authentication failed';
+                    console.error('[Firebase Auth] ❌ Server error:', errorMsg);
+                    showAuthMessage(`Authentication failed: ${errorMsg}. Please try again.`, 'error');
+                    if (googleSignInBtn) googleSignInBtn.disabled = false;
                 }
             } catch (error) {
-                console.error('Firebase Auth Error:', error);
+                console.error('[Firebase Auth] ❌ Error:', error);
+
+                let userMessage = 'Authentication failed';
+                if (error.code === 'auth/popup-blocked') {
+                    userMessage = 'Pop-up blocked. Please allow pop-ups for this site.';
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    userMessage = 'Authentication cancelled. Please try again.';
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    userMessage = 'You closed the authentication window.';
+                } else if (error.message) {
+                    userMessage = `Error: ${error.message}`;
+                }
+
+                showAuthMessage(userMessage, 'error');
+                const googleSignInBtn = document.getElementById('google-auth-btn');
+                if (googleSignInBtn) googleSignInBtn.disabled = false;
             }
         };
     </script>
@@ -376,6 +423,51 @@
             background: linear-gradient(#ec4899, #8b5cf6);
             border-radius: 4px;
         }
+
+        /* Auth Message Styles */
+        .auth-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 500px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .auth-message-info {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .auth-message-success {
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: white;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+
+        .auth-message-error {
+            background: linear-gradient(135deg, #ef4444, #991b1b);
+            color: white;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
     </style>
 </head>
 
@@ -459,6 +551,9 @@
 
     <!-- Custom positioned Google Sign-in prompt container -->
     <div id="google-signin-prompt" class="fixed top-20 right-4 z-[100]"></div>
+
+    <!-- Auth Message Container -->
+    <div id="auth-message" class="auth-message" style="display: none;"></div>
 
     <script>
         // Placeholder for compatibility
