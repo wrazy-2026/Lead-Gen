@@ -196,16 +196,7 @@ def init_oauth(app):
     
     oauth.init_app(app)
     
-    # Register Google OAuth
-    oauth.register(
-        name='google',
-        client_id=GOOGLE_CLIENT_ID,
-        client_secret=GOOGLE_CLIENT_SECRET,
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-        client_kwargs={
-            'scope': 'openid email profile'
-        }
-    )
+    # Standard Google OAuth registration removed in favor of Firebase Auth
 
     # Initialize Firebase Admin
     if not firebase_admin._apps:

@@ -314,49 +314,14 @@ def landing():
 
 @app.route('/login')
 def login():
-    """Initiate Google OAuth login."""
-    if current_user.is_authenticated:
-        if current_user.is_admin:
-            return redirect(url_for('admin_dashboard'))
-        return redirect(url_for('client_dashboard'))
-    
-    # Generate the Google OAuth URL
-    redirect_uri = url_for('auth_callback', _external=True)
-    return oauth.google.authorize_redirect(redirect_uri)
+    """Login is now handled on the landing page via Firebase."""
+    return redirect(url_for('landing'))
 
 
 @app.route('/auth/callback')
 def auth_callback():
-    """Handle Google OAuth callback."""
-    try:
-        token = oauth.google.authorize_access_token()
-        user_info = token.get('userinfo')
-        
-        if not user_info:
-            # Fetch user info if not in token
-            user_info = oauth.google.get('https://www.googleapis.com/oauth2/v3/userinfo').json()
-        
-        # Create or update user
-        user = User.create_or_update(
-            email=user_info['email'],
-            name=user_info.get('name', user_info['email']),
-            picture=user_info.get('picture')
-        )
-        
-        # Log in the user
-        login_user(user)
-        
-        flash(f'Welcome, {user.name}!', 'success')
-        
-        # Redirect based on role
-        if user.is_admin:
-            return redirect(url_for('admin_dashboard'))
-        return redirect(url_for('client_dashboard'))
-        
-    except Exception as e:
-        print(f"OAuth error: {e}")
-        flash('Authentication failed. Please try again.', 'error')
-        return redirect(url_for('landing'))
+    """Removed in favor of Firebase Auth."""
+    return redirect(url_for('landing'))
 
 
 @app.route('/logout')
@@ -380,8 +345,11 @@ def firebase_login():
             
         user = verify_and_login_firebase(id_token)
         if user:
+            # Determine redirect
+            redirect_url = url_for('admin_dashboard') if user.is_admin else url_for('client_dashboard')
             return jsonify({
                 'success': True,
+                'redirect': redirect_url,
                 'user': {
                     'id': user.id,
                     'email': user.email,
@@ -398,59 +366,8 @@ def firebase_login():
 
 @app.route('/auth/google-one-tap', methods=['POST'])
 def google_one_tap_callback():
-    """Handle Google One Tap sign-in callback."""
-    try:
-        from google.oauth2 import id_token
-        from google.auth.transport import requests as google_requests
-        
-        # Get the credential token from the request
-        credential = request.form.get('credential')
-        
-        if not credential:
-            flash('No credential received', 'error')
-            return redirect(url_for('landing'))
-        
-        # Verify the token
-        idinfo = id_token.verify_oauth2_token(
-            credential, 
-            google_requests.Request(), 
-            app.config['GOOGLE_CLIENT_ID']
-        )
-        
-        # Get user info from verified token
-        email = idinfo.get('email')
-        name = idinfo.get('name', email)
-        picture = idinfo.get('picture')
-        
-        if not email:
-            flash('Could not get email from Google', 'error')
-            return redirect(url_for('landing'))
-        
-        # Create or update user
-        user = User.create_or_update(
-            email=email,
-            name=name,
-            picture=picture
-        )
-        
-        # Log in the user
-        login_user(user)
-        
-        flash(f'Welcome, {user.name}!', 'success')
-        
-        # Redirect based on role
-        if user.is_admin:
-            return redirect(url_for('admin_dashboard'))
-        return redirect(url_for('client_dashboard'))
-        
-    except ValueError as e:
-        print(f"Google One Tap verification error: {e}")
-        flash('Invalid credential. Please try again.', 'error')
-        return redirect(url_for('landing'))
-    except Exception as e:
-        print(f"Google One Tap error: {e}")
-        flash('Authentication failed. Please try again.', 'error')
-        return redirect(url_for('landing'))
+    """Removed in favor of Firebase Auth."""
+    return redirect(url_for('landing'))
 
 
 # ============================================================================
