@@ -46,4 +46,7 @@ substitutions:
 images:
   - 'gcr.io/$PROJECT_ID/leadgen-dashboard'
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 timeout: '1200s'
