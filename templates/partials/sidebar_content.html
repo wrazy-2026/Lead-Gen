@@ -1,0 +1,182 @@
+<!-- Sidebar content -->
+<div class="flex h-16 shrink-0 items-center">
+    <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl gradient-pink-blue flex items-center justify-center glow-pink">
+            <i class="fas fa-rocket text-white text-lg"></i>
+        </div>
+        <div>
+            <h2 class="text-lg font-bold text-white">LeadGen<span class="gradient-text-pink">Pro</span></h2>
+            <p class="text-xs text-gray-400">Business Tracker</p>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Dashboard Switcher -->
+{% if current_user.is_admin %}
+<div class="mt-4 mb-2 p-3 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl border border-purple-500/20">
+    <p class="text-xs font-semibold text-purple-300 uppercase tracking-wider mb-2">Admin Access</p>
+    <div class="flex gap-2">
+        <a href="{{ url_for('admin_dashboard') }}" class="flex-1 text-center py-2 px-3 rounded-lg text-xs font-medium transition-all
+                  {% if request.endpoint == 'admin_dashboard' %}
+                  gradient-pink-blue text-white
+                  {% else %}
+                  bg-white/5 text-purple-300 hover:bg-white/10
+                  {% endif %}">
+            <i class="fas fa-shield-alt mr-1"></i>Admin
+        </a>
+        <a href="{{ url_for('client_dashboard') }}" class="flex-1 text-center py-2 px-3 rounded-lg text-xs font-medium transition-all
+                  {% if request.endpoint == 'client_dashboard' %}
+                  gradient-pink-blue text-white
+                  {% else %}
+                  bg-white/5 text-purple-300 hover:bg-white/10
+                  {% endif %}">
+            <i class="fas fa-user mr-1"></i>Client
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<nav class="flex flex-1 flex-col mt-4">
+    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+        <li>
+            <ul role="list" class="-mx-2 space-y-1">
+                <li>
+                    <a href="{{ url_for('dashboard') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'dashboard' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i
+                            class="fas fa-chart-pie text-lg {% if request.endpoint == 'dashboard' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('leads') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'leads' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i
+                            class="fas fa-list-ul text-lg {% if request.endpoint == 'leads' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        All Leads
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('fetch_leads') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'fetch_leads' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i
+                            class="fas fa-download text-lg {% if request.endpoint == 'fetch_leads' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Fetch New Leads
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('enrich_page') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'enrich_page' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i
+                            class="fas fa-magic text-lg {% if request.endpoint == 'enrich_page' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Enrich Leads
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('domain_lookup_page') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'domain_lookup_page' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i
+                            class="fas fa-globe text-lg {% if request.endpoint == 'domain_lookup_page' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Domain Lookup
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('export_page') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'export_page' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i
+                            class="fas fa-file-export text-lg {% if request.endpoint == 'export_page' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Export Data
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('search_page') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'search_page' %}
+                              bg-cyan-500/10 text-cyan-400 border border-cyan-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-cyan-400
+                              {% endif %}">
+                        <i
+                            class="fas fa-search-dollar text-lg {% if request.endpoint == 'search_page' %}text-cyan-400{% else %}text-gray-500 group-hover:text-cyan-400{% endif %}"></i>
+                        Custom Search
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <li>
+            <div class="text-xs font-semibold leading-6 text-gray-500 uppercase tracking-wider">States</div>
+            <ul role="list" class="-mx-2 mt-2 space-y-1 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+                {% set states = [
+                ('AL', 'Alabama'), ('AK', 'Alaska'), ('AZ', 'Arizona'), ('AR', 'Arkansas'),
+                ('CA', 'California'), ('CO', 'Colorado'), ('CT', 'Connecticut'), ('DE', 'Delaware'),
+                ('FL', 'Florida'), ('GA', 'Georgia'), ('HI', 'Hawaii'), ('ID', 'Idaho'),
+                ('IL', 'Illinois'), ('IN', 'Indiana'), ('IA', 'Iowa'), ('KS', 'Kansas'),
+                ('KY', 'Kentucky'), ('LA', 'Louisiana'), ('ME', 'Maine'), ('MD', 'Maryland'),
+                ('MA', 'Massachusetts'), ('MI', 'Michigan'), ('MN', 'Minnesota'), ('MS', 'Mississippi'),
+                ('MO', 'Missouri'), ('MT', 'Montana'), ('NE', 'Nebraska'), ('NV', 'Nevada'),
+                ('NH', 'New Hampshire'), ('NJ', 'New Jersey'), ('NM', 'New Mexico'), ('NY', 'New York'),
+                ('NC', 'North Carolina'), ('ND', 'North Dakota'), ('OH', 'Ohio'), ('OK', 'Oklahoma'),
+                ('OR', 'Oregon'), ('PA', 'Pennsylvania'), ('RI', 'Rhode Island'), ('SC', 'South Carolina'),
+                ('SD', 'South Dakota'), ('TN', 'Tennessee'), ('TX', 'Texas'), ('UT', 'Utah'),
+                ('VT', 'Vermont'), ('VA', 'Virginia'), ('WA', 'Washington'), ('WV', 'West Virginia'),
+                ('WI', 'Wisconsin'), ('WY', 'Wyoming'), ('DC', 'Washington DC')
+                ] %}
+                {% for code, name in states %}
+                <li>
+                    <a href="{{ url_for('leads', state=code) }}" class="group flex gap-x-3 rounded-lg p-2 text-sm font-medium leading-6 
+                        {% if request.args.get('state') == code %}
+                        bg-pink-500/10 text-pink-400 border border-pink-500/20
+                        {% else %}
+                        text-gray-400 hover:bg-white/5 hover:text-pink-400
+                        {% endif %}">
+                        <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border 
+                            {% if request.args.get('state') == code %}
+                            border-pink-500/50 bg-pink-500/10 text-pink-400
+                            {% else %}
+                            border-white/10 bg-white/5 text-gray-400 group-hover:border-pink-500/50 group-hover:text-pink-400
+                            {% endif %} text-xs font-medium">{{ code }}</span>
+                        {{ name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </li>
+
+        <li class="mt-auto">
+            <a href="{{ url_for('settings') }}"
+                class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-gray-300 hover:bg-white/5 hover:text-pink-400">
+                <i class="fas fa-cog text-lg text-gray-500 group-hover:text-pink-400"></i>
+                Settings
+            </a>
+            <a href="{{ url_for('logout') }}"
+                class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-gray-300 hover:bg-red-500/10 hover:text-red-400 mt-2">
+                <i class="fas fa-sign-out-alt text-lg text-gray-500 group-hover:text-red-400"></i>
+                Sign Out
+            </a>
+        </li>
+    </ul>
+</nav>

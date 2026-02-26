@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+
+{% block title %}All Leads - Lead Generation{% endblock %}
+{% block page_title %}All Leads{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Filters -->
+    <div class="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
+        <form method="GET" action="{{ url_for('leads') }}" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <div class="relative">
+                    <input type="text" name="search" id="search" value="{{ request.args.get('search', '') }}"
+                        placeholder="Business name..."
+                        class="block w-full rounded-lg border border-gray-300 px-4 py-2.5 pl-10 text-sm focus:border-primary-500 focus:ring-primary-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+
+            <div class="w-48">
+                <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                <select name="state" id="state"
+                    class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:ring-primary-500">
+                    <option value="">All States</option>
+                    <option value="AL" {% if request.args.get('state')=='AL' %}selected{% endif %}>Alabama</option>
+                    <option value="AK" {% if request.args.get('state')=='AK' %}selected{% endif %}>Alaska</option>
+                    <option value="AZ" {% if request.args.get('state')=='AZ' %}selected{% endif %}>Arizona</option>
+                    <option value="AR" {% if request.args.get('state')=='AR' %}selected{% endif %}>Arkansas</option>
+                    <option value="CA" {% if request.args.get('state')=='CA' %}selected{% endif %}>California</option>
+                    <option value="CO" {% if request.args.get('state')=='CO' %}selected{% endif %}>Colorado</option>
+                    <option value="CT" {% if request.args.get('state')=='CT' %}selected{% endif %}>Connecticut</option>
+                    <option value="DE" {% if request.args.get('state')=='DE' %}selected{% endif %}>Delaware</option>
+                    <option value="FL" {% if request.args.get('state')=='FL' %}selected{% endif %}>Florida</option>
+                    <option value="GA" {% if request.args.get('state')=='GA' %}selected{% endif %}>Georgia</option>
+                    <option value="HI" {% if request.args.get('state')=='HI' %}selected{% endif %}>Hawaii</option>
+                    <option value="ID" {% if request.args.get('state')=='ID' %}selected{% endif %}>Idaho</option>
+                    <option value="IL" {% if request.args.get('state')=='IL' %}selected{% endif %}>Illinois</option>
+                    <option value="IN" {% if request.args.get('state')=='IN' %}selected{% endif %}>Indiana</option>
+                    <option value="IA" {% if request.args.get('state')=='IA' %}selected{% endif %}>Iowa</option>
+                    <option value="KS" {% if request.args.get('state')=='KS' %}selected{% endif %}>Kansas</option>
+                    <option value="KY" {% if request.args.get('state')=='KY' %}selected{% endif %}>Kentucky</option>
+                    <option value="LA" {% if request.args.get('state')=='LA' %}selected{% endif %}>Louisiana</option>
+                    <option value="ME" {% if request.args.get('state')=='ME' %}selected{% endif %}>Maine</option>
+                    <option value="MD" {% if request.args.get('state')=='MD' %}selected{% endif %}>Maryland</option>
+                    <option value="MA" {% if request.args.get('state')=='MA' %}selected{% endif %}>Massachusetts
+                    </option>
+                    <option value="MI" {% if request.args.get('state')=='MI' %}selected{% endif %}>Michigan</option>
+                    <option value="MN" {% if request.args.get('state')=='MN' %}selected{% endif %}>Minnesota</option>
+                    <option value="MS" {% if request.args.get('state')=='MS' %}selected{% endif %}>Mississippi</option>
+                    <option value="MO" {% if request.args.get('state')=='MO' %}selected{% endif %}>Missouri</option>
+                    <option value="MT" {% if request.args.get('state')=='MT' %}selected{% endif %}>Montana</option>
+                    <option value="NE" {% if request.args.get('state')=='NE' %}selected{% endif %}>Nebraska</option>
+                    <option value="NV" {% if request.args.get('state')=='NV' %}selected{% endif %}>Nevada</option>
+                    <option value="NH" {% if request.args.get('state')=='NH' %}selected{% endif %}>New Hampshire
+                    </option>
+                    <option value="NJ" {% if request.args.get('state')=='NJ' %}selected{% endif %}>New Jersey</option>
+                    <option value="NM" {% if request.args.get('state')=='NM' %}selected{% endif %}>New Mexico</option>
+                    <option value="NY" {% if request.args.get('state')=='NY' %}selected{% endif %}>New York</option>
+                    <option value="NC" {% if request.args.get('state')=='NC' %}selected{% endif %}>North Carolina
+                    </option>
+                    <option value="ND" {% if request.args.get('state')=='ND' %}selected{% endif %}>North Dakota</option>
+                    <option value="OH" {% if request.args.get('state')=='OH' %}selected{% endif %}>Ohio</option>
+                    <option value="OK" {% if request.args.get('state')=='OK' %}selected{% endif %}>Oklahoma</option>
+                    <option value="OR" {% if request.args.get('state')=='OR' %}selected{% endif %}>Oregon</option>
+                    <option value="PA" {% if request.args.get('state')=='PA' %}selected{% endif %}>Pennsylvania</option>
+                    <option value="RI" {% if request.args.get('state')=='RI' %}selected{% endif %}>Rhode Island</option>
+                    <option value="SC" {% if request.args.get('state')=='SC' %}selected{% endif %}>South Carolina
+                    </option>
+                    <option value="SD" {% if request.args.get('state')=='SD' %}selected{% endif %}>South Dakota</option>
+                    <option value="TN" {% if request.args.get('state')=='TN' %}selected{% endif %}>Tennessee</option>
+                    <option value="TX" {% if request.args.get('state')=='TX' %}selected{% endif %}>Texas</option>
+                    <option value="UT" {% if request.args.get('state')=='UT' %}selected{% endif %}>Utah</option>
+                    <option value="VT" {% if request.args.get('state')=='VT' %}selected{% endif %}>Vermont</option>
+                    <option value="VA" {% if request.args.get('state')=='VA' %}selected{% endif %}>Virginia</option>
+                    <option value="WA" {% if request.args.get('state')=='WA' %}selected{% endif %}>Washington</option>
+                    <option value="WV" {% if request.args.get('state')=='WV' %}selected{% endif %}>West Virginia
+                    </option>
+                    <option value="WI" {% if request.args.get('state')=='WI' %}selected{% endif %}>Wisconsin</option>
+                    <option value="WY" {% if request.args.get('state')=='WY' %}selected{% endif %}>Wyoming</option>
+                    <option value="DC" {% if request.args.get('state')=='DC' %}selected{% endif %}>Washington D.C.
+                    </option>
+                    <option value="US" {% if request.args.get('state')=='US' %}selected{% endif %}>US (Federal/SEC)
+                    </option>
+                </select>
+            </div>
+
+            <div class="w-40">
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" id="status"
+                    class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:ring-primary-500">
+                    <option value="">All Statuses</option>
+                    <option value="Active" {% if request.args.get('status')=='Active' %}selected{% endif %}>Active
+                    </option>
+                    <option value="Pending" {% if request.args.get('status')=='Pending' %}selected{% endif %}>Pending
+                    </option>
+                    <option value="New Filing" {% if request.args.get('status')=='New Filing' %}selected{% endif %}>New
+                        Filing</option>
+                </select>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit"
+                    class="px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm">
+                    <i class="fas fa-search mr-2"></i>Filter
+                </button>
+                <a href="{{ url_for('leads') }}"
+                    class="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Table -->
+    <div class="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-semibold text-gray-900">Business Leads</h3>
+                <p class="text-xs text-gray-500 mt-1">{{ total_leads }} total records</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{{ url_for('export_csv') }}"
+                    class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                    <i class="fas fa-download mr-1"></i>CSV
+                </a>
+                <a href="{{ url_for('export_sheets_direct') }}"
+                    class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
+                    <i class="fas fa-table mr-1"></i>Google Sheets
+                </a>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto p-2" style="max-height: 70vh;">
+            <table id="leadsTable" class="w-full stripe hover compact-table" style="width:100%; font-size: 10px;">
+                <thead>
+                    <tr class="text-xs">
+                        <th class="text-left px-1">Business Name</th>
+                        <th class="text-left px-1">Category</th>
+                        <th class="text-left px-1">State</th>
+                        <th class="text-left px-1">Date</th>
+                        <th class="text-left px-1">Address</th>
+                        <th class="text-left px-1">Phone</th>
+                        <th class="text-left px-1">Owner</th>
+                        <th class="text-left px-1">First Name</th>
+                        <th class="text-left px-1">Last Name</th>
+                        <th class="text-left px-1">Phone 1</th>
+                        <th class="text-left px-1">Phone 2</th>
+                        <th class="text-left px-1">Email 1</th>
+                        <th class="text-left px-1">Email 2</th>
+                        <th class="text-left px-1">Email 3</th>
+                        <th class="text-left px-1">Email 4</th>
+                        <th class="text-left px-1">Email 5</th>
+                        <th class="text-left px-1">Age</th>
+                        <th class="text-left px-1">Website</th>
+                        <th class="text-left px-1">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lead in leads %}
+                    <tr class="text-xs">
+                        <td class="px-1 py-1 whitespace-nowrap">
+                            <span class="font-medium text-gray-900" title="{{ lead.business_name }}">{{
+                                lead.business_name | truncate(20) }}</span>
+                        </td>
+                        <td class="px-1 py-1 whitespace-nowrap">
+                            <span
+                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ lead.industry_category or '-' }}
+                            </span>
+                        </td>
+                        <td class="px-1 py-1">
+                            <span
+                                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                {{ lead.state }}
+                            </span>
+                        </td>
+                        <td class="px-1 py-1 text-gray-600 whitespace-nowrap">{{ lead.filing_date }}</td>
+                        <td class="px-1 py-1 text-gray-600 whitespace-nowrap"
+                            title="{{ lead.address or lead.business_address or '' }}">{{ (lead.address or
+                            lead.business_address or '-') | truncate(25) }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.business_phone or lead.phone or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.owner_name or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.first_name or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.last_name or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.phone_1 or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.phone_2 or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">
+                            {% if lead.email_1 or lead.email %}
+                            <a href="mailto:{{ lead.email_1 or lead.email }}"
+                                class="text-primary-600 hover:text-primary-700"
+                                title="{{ lead.email_1 or lead.email }}">
+                                {{ (lead.email_1 or lead.email) | truncate(18) }}
+                            </a>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.email_2 or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.email_3 or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.email_4 or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.email_5 or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">{{ lead.age or '-' }}</td>
+                        <td class="px-1 py-1 whitespace-nowrap">
+                            {% if lead.website %}
+                            <a href="{{ lead.website }}" target="_blank" class="text-primary-600 hover:text-primary-700"
+                                title="{{ lead.website }}">
+                                {{ lead.website | truncate(15) }}
+                            </a>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="px-1 py-1">
+                            <div class="flex gap-1">
+                                <a href="{{ lead.url }}" target="_blank"
+                                    class="inline-flex items-center px-1 py-0.5 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded transition-colors"
+                                    title="View Filing">
+                                    <i class="fas fa-external-link-alt text-xs"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="19" class="text-center py-8">
+                            <div class="flex flex-col items-center">
+                                <div class="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                                    <i class="fas fa-inbox text-xl text-gray-400"></i>
+                                </div>
+                                <p class="text-gray-500 text-sm mb-2">No leads found</p>
+                                <a href="{{ url_for('fetch_leads') }}"
+                                    class="text-primary-600 hover:text-primary-700 font-medium text-xs">
+                                    Fetch new leads <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+            <div class="text-xs text-gray-500 font-medium">
+                Page {{ page }}
+            </div>
+            <div class="flex gap-2">
+                {% if has_prev %}
+                <a href="{{ url_for('leads', page=page-1, state=request.args.get('state'), status=request.args.get('status'), search=request.args.get('search')) }}"
+                    class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-xs font-medium shadow-sm transition-colors">
+                    Previous
+                </a>
+                {% else %}
+                <span
+                    class="px-3 py-1.5 bg-gray-100 border border-gray-200 text-gray-400 rounded text-xs font-medium cursor-not-allowed">
+                    Previous
+                </span>
+                {% endif %}
+
+                {% if has_next %}
+                <a href="{{ url_for('leads', page=page+1, state=request.args.get('state'), status=request.args.get('status'), search=request.args.get('search')) }}"
+                    class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-xs font-medium shadow-sm transition-colors">
+                    Next
+                </a>
+                {% else %}
+                <span
+                    class="px-3 py-1.5 bg-gray-100 border border-gray-200 text-gray-400 rounded text-xs font-medium cursor-not-allowed">
+                    Next
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+    .compact-table th,
+    .compact-table td {
+        font-size: 10px !important;
+        padding: 4px 6px !important;
+        white-space: nowrap;
+    }
+
+    .compact-table thead th {
+        background: #f8fafc;
+        font-weight: 600;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+
+    .dataTables_wrapper {
+        font-size: 11px !important;
+    }
+
+    .dataTables_filter input {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+    }
+
+    .dataTables_length select {
+        font-size: 11px !important;
+        padding: 2px 4px !important;
+    }
+
+    .dataTables_info,
+    .dataTables_paginate {
+        font-size: 11px !important;
+    }
+
+    #leadsTable_wrapper {
+        overflow-x: auto;
+    }
+</style>
+<script>
+    $(document).ready(function () {
+        // Only initialize DataTable if there are leads
+        if ($('#leadsTable tbody tr').length > 0 && !$('#leadsTable tbody tr td[colspan]').length) {
+            $('#leadsTable').DataTable({
+                scrollX: true,
+                scrollCollapse: true,
+                paging: false, // Server-side pagination used instead
+                ordering: true, // Keep client-side sorting for current page
+                searching: false, // Server-side search used instead
+                info: false, // Hide "Showing 1 to 50 of 50" since we manipulate it manually
+                autoWidth: false,
+                language: {
+                    emptyTable: "No leads found."
+                },
+                columnDefs: [
+                    { width: '120px', targets: 0 },
+                    { width: '40px', targets: 1 },
+                    { width: '70px', targets: 2 },
+                    { width: '100px', targets: [3, 10, 11, 12, 13, 14, 16] },
+                    { width: '80px', targets: [4, 5, 8, 9] },
+                    { width: '60px', targets: [6, 7, 15, 17] }
+                ]
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+
+{% block title %}Domain Lookup - Lead Generation{% endblock %}
+{% block page_title %}Domain Owner Lookup{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 p-8 text-white shadow-xl">
+        <div class="flex items-center gap-6">
+            <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+                <i class="fas fa-globe text-4xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold">Domain Owner Lookup</h2>
+                <p class="text-cyan-100 mt-1">Find domain registration info, owner details, emails, and phone numbers
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="rounded-2xl bg-white p-8 shadow-sm border border-gray-100" x-data="domainLookup()">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">
+            <i class="fas fa-search text-cyan-500 mr-2"></i>Search Domain
+        </h3>
+
+        <form @submit.prevent="lookupDomain()" class="space-y-6">
+            <div>
+                <label for="domain" class="block text-sm font-medium text-gray-700 mb-2">
+                    Enter Domain Name
+                </label>
+                <div class="flex gap-4">
+                    <div class="flex-1 relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-globe text-gray-400"></i>
+                        </div>
+                        <input type="text" name="domain" id="domain" x-model="domain" placeholder="example.com"
+                            class="w-full pl-11 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-lg"
+                            required>
+                    </div>
+                    <button type="submit" :disabled="loading || !domain" class="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl 
+                                   hover:from-cyan-600 hover:to-blue-700 transition-all font-semibold text-lg
+                                   shadow-lg shadow-cyan-200 disabled:opacity-50 disabled:cursor-not-allowed
+                                   flex items-center gap-3">
+                        <template x-if="!loading">
+                            <span><i class="fas fa-search mr-2"></i>Lookup</span>
+                        </template>
+                        <template x-if="loading">
+                            <span class="flex items-center gap-2">
+                                <div class="spinner"></div>
+                                Searching...
+                            </span>
+                        </template>
+                    </button>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Enter a domain without http:// or www (e.g., google.com, microsoft.com)
+                </p>
+            </div>
+        </form>
+
+        <!-- Error Message -->
+        <div x-show="error" x-cloak class="mt-6 p-4 rounded-xl bg-red-50 border border-red-200">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-exclamation-circle text-red-500"></i>
+                <p class="text-red-700" x-text="error"></p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div x-show="result" x-cloak class="mt-8 space-y-6">
+            <!-- Domain Header -->
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-100">
+                        <i class="fas fa-globe text-2xl text-cyan-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-bold text-gray-900" x-text="result.domain"></h4>
+                        <p class="text-sm text-gray-500" x-show="result.company_name" x-text="result.company_name"></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-medium" :class="result.confidence >= 0.8 ? 'bg-green-100 text-green-700' : 
+                                  result.confidence >= 0.5 ? 'bg-yellow-100 text-yellow-700' : 
+                                  'bg-gray-100 text-gray-700'">
+                        <span x-text="Math.round(result.confidence * 100)"></span>% Confidence
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Owner Information -->
+                <div class="rounded-xl bg-white border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-gray-200">
+                        <h5 class="font-semibold text-gray-900">
+                            <i class="fas fa-user text-purple-500 mr-2"></i>Owner Information
+                        </h5>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div x-show="result.owner_name">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Owner
+                                Name</label>
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <span class="text-purple-700 font-bold"
+                                        x-text="result.first_name ? result.first_name.charAt(0) + (result.last_name ? result.last_name.charAt(0) : '') : 'N/A'"></span>
+                                </div>
+                                <span class="text-lg font-medium text-gray-900" x-text="result.owner_name"></span>
+                            </div>
+                        </div>
+                        <div x-show="result.first_name" class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">First
+                                    Name</label>
+                                <p class="text-gray-900" x-text="result.first_name || '-'"></p>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Last
+                                    Name</label>
+                                <p class="text-gray-900" x-text="result.last_name || '-'"></p>
+                            </div>
+                        </div>
+                        <div x-show="result.owner_title">
+                            <label
+                                class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Title</label>
+                            <p class="text-gray-900" x-text="result.owner_title"></p>
+                        </div>
+                        <div x-show="result.linkedin_url">
+                            <label
+                                class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">LinkedIn</label>
+                            <a :href="result.linkedin_url" target="_blank"
+                                class="inline-flex items-center text-blue-600 hover:text-blue-800">
+                                <i class="fab fa-linkedin mr-2"></i>
+                                <span x-text="result.linkedin_url.split('/').slice(-1)[0] || 'Profile'"></span>
+                                <i class="fas fa-external-link-alt ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                        <div x-show="!result.owner_name && !result.first_name" class="text-center py-4 text-gray-500">
+                            <i class="fas fa-user-slash text-2xl mb-2"></i>
+                            <p>No owner information found</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="rounded-xl bg-white border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
+                        <h5 class="font-semibold text-gray-900">
+                            <i class="fas fa-address-book text-green-500 mr-2"></i>Contact Information
+                        </h5>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div x-show="result.emails && result.emails.length > 0">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Email
+                                Addresses</label>
+                            <div class="space-y-2">
+                                <template x-for="email in result.emails" :key="email">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-envelope text-gray-400"></i>
+                                        <a :href="'mailto:' + email" class="text-blue-600 hover:text-blue-800"
+                                            x-text="email"></a>
+                                        <button @click="copyToClipboard(email)"
+                                            class="p-1 text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-copy text-xs"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div x-show="result.phones && result.phones.length > 0">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Phone
+                                Numbers</label>
+                            <div class="space-y-2">
+                                <template x-for="phone in result.phones" :key="phone">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-phone text-gray-400"></i>
+                                        <a :href="'tel:' + phone" class="text-blue-600 hover:text-blue-800"
+                                            x-text="phone"></a>
+                                        <button @click="copyToClipboard(phone)"
+                                            class="p-1 text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-copy text-xs"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div x-show="result.registrant_email">
+                            <label
+                                class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Registrant
+                                Email</label>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-envelope text-gray-400"></i>
+                                <span class="text-gray-900" x-text="result.registrant_email"></span>
+                            </div>
+                        </div>
+                        <div x-show="result.registrant_phone">
+                            <label
+                                class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Registrant
+                                Phone</label>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-phone text-gray-400"></i>
+                                <span class="text-gray-900" x-text="result.registrant_phone"></span>
+                            </div>
+                        </div>
+                        <div x-show="(!result.emails || result.emails.length === 0) && 
+                                     (!result.phones || result.phones.length === 0) && 
+                                     !result.registrant_email && !result.registrant_phone"
+                            class="text-center py-4 text-gray-500">
+                            <i class="fas fa-address-book text-2xl mb-2"></i>
+                            <p>No contact information found</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Domain Registration -->
+                <div class="rounded-xl bg-white border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-gray-200">
+                        <h5 class="font-semibold text-gray-900">
+                            <i class="fas fa-id-card text-blue-500 mr-2"></i>Registration Details
+                        </h5>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div x-show="result.registrant_name">
+                            <label
+                                class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Registrant
+                                Name</label>
+                            <p class="text-gray-900" x-text="result.registrant_name"></p>
+                        </div>
+                        <div x-show="result.registrant_org">
+                            <label
+                                class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Registrant
+                                Organization</label>
+                            <p class="text-gray-900" x-text="result.registrant_org"></p>
+                        </div>
+                        <div x-show="result.registrar">
+                            <label
+                                class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Registrar</label>
+                            <p class="text-gray-900" x-text="result.registrar"></p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div x-show="result.creation_date">
+                                <label
+                                    class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Created</label>
+                                <p class="text-gray-900" x-text="result.creation_date"></p>
+                            </div>
+                            <div x-show="result.expiration_date">
+                                <label
+                                    class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Expires</label>
+                                <p class="text-gray-900" x-text="result.expiration_date"></p>
+                            </div>
+                        </div>
+                        <div x-show="result.updated_date">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Last
+                                Updated</label>
+                            <p class="text-gray-900" x-text="result.updated_date"></p>
+                        </div>
+                        <div x-show="!result.registrant_name && !result.registrant_org && !result.registrar && !result.creation_date"
+                            class="text-center py-4 text-gray-500">
+                            <i class="fas fa-file-alt text-2xl mb-2"></i>
+                            <p>No registration details found</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin/Tech Contacts -->
+                <div class="rounded-xl bg-white border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-gray-200">
+                        <h5 class="font-semibold text-gray-900">
+                            <i class="fas fa-users text-orange-500 mr-2"></i>Additional Contacts
+                        </h5>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div x-show="result.admin_name || result.admin_email">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Admin
+                                Contact</label>
+                            <p class="text-gray-900" x-show="result.admin_name" x-text="result.admin_name"></p>
+                            <p class="text-blue-600" x-show="result.admin_email" x-text="result.admin_email"></p>
+                        </div>
+                        <div x-show="result.tech_name || result.tech_email">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Tech
+                                Contact</label>
+                            <p class="text-gray-900" x-show="result.tech_name" x-text="result.tech_name"></p>
+                            <p class="text-blue-600" x-show="result.tech_email" x-text="result.tech_email"></p>
+                        </div>
+                        <div x-show="result.address">
+                            <label
+                                class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Address</label>
+                            <p class="text-gray-900" x-text="result.address"></p>
+                        </div>
+                        <div x-show="!result.admin_name && !result.admin_email && !result.tech_name && !result.tech_email && !result.address"
+                            class="text-center py-4 text-gray-500">
+                            <i class="fas fa-user-friends text-2xl mb-2"></i>
+                            <p>No additional contacts found</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copy All Button -->
+            <div class="flex justify-center pt-4">
+                <button @click="copyAllToClipboard()"
+                    class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium">
+                    <i class="fas fa-copy mr-2"></i>Copy All Results
+                </button>
+                <button @click="exportToCSV()"
+                    class="px-6 py-3 bg-cyan-100 text-cyan-700 rounded-xl hover:bg-cyan-200 transition-colors font-medium ml-4">
+                    <i class="fas fa-file-csv mr-2"></i>Export to CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Searches -->
+    <div class="rounded-2xl bg-white p-8 shadow-sm border border-gray-100"
+        x-data="{ searches: JSON.parse(localStorage.getItem('domainSearches') || '[]') }">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-history text-gray-400 mr-2"></i>Recent Searches
+        </h3>
+        <div x-show="searches.length === 0" class="text-center py-6 text-gray-500">
+            <i class="fas fa-search text-3xl mb-2"></i>
+            <p>No recent searches yet</p>
+        </div>
+        <div x-show="searches.length > 0" class="flex flex-wrap gap-2">
+            <template x-for="search in searches.slice(0, 10)" :key="search">
+                <button @click="$dispatch('search-domain', { domain: search })"
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
+                    <i class="fas fa-globe mr-1 text-gray-400"></i>
+                    <span x-text="search"></span>
+                </button>
+            </template>
+        </div>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-xl bg-blue-50 p-5 border border-blue-100">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-info-circle text-blue-600"></i>
+                <h4 class="font-semibold text-blue-900">What Data Is Searched?</h4>
+            </div>
+            <ul class="text-sm text-blue-700 space-y-1 ml-6 list-disc">
+                <li>WHOIS registration records</li>
+                <li>Owner/Founder information via Google search</li>
+                <li>LinkedIn profiles related to the domain</li>
+                <li>Contact pages and about pages</li>
+                <li>Email addresses and phone numbers</li>
+            </ul>
+        </div>
+
+        <div class="rounded-xl bg-yellow-50 p-5 border border-yellow-100">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-lightbulb text-yellow-600"></i>
+                <h4 class="font-semibold text-yellow-900">Tips for Better Results</h4>
+            </div>
+            <ul class="text-sm text-yellow-700 space-y-1 ml-6 list-disc">
+                <li>Enter just the domain (example.com) without http://</li>
+                <li>Some domains have privacy protection enabled</li>
+                <li>Results combine multiple data sources</li>
+                <li>Higher confidence = more reliable information</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function domainLookup() {
+        return {
+            domain: '',
+            loading: false,
+            error: null,
+            result: null,
+
+            init() {
+                // Listen for search-domain events from recent searches
+                this.$el.addEventListener('search-domain', (e) => {
+                    this.domain = e.detail.domain;
+                    this.lookupDomain();
+                });
+            },
+
+            async lookupDomain() {
+                if (!this.domain) return;
+
+                this.loading = true;
+                this.error = null;
+                this.result = null;
+
+                // Clean domain input
+                let cleanDomain = this.domain.toLowerCase().trim();
+                cleanDomain = cleanDomain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+                this.domain = cleanDomain;
+
+                try {
+                    const response = await fetch('/api/domain-lookup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ domain: cleanDomain })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.result = data.result;
+                        this.saveToHistory(cleanDomain);
+                    } else {
+                        this.error = data.error || 'Failed to lookup domain';
+                    }
+                } catch (err) {
+                    console.error('Error:', err);
+                    this.error = 'Network error. Please try again.';
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            saveToHistory(domain) {
+                let searches = JSON.parse(localStorage.getItem('domainSearches') || '[]');
+                // Remove if already exists
+                searches = searches.filter(s => s !== domain);
+                // Add to beginning
+                searches.unshift(domain);
+                // Keep only last 20
+                searches = searches.slice(0, 20);
+                localStorage.setItem('domainSearches', JSON.stringify(searches));
+            },
+
+            copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    // Show toast notification
+                    this.showToast('Copied to clipboard!');
+                });
+            },
+
+            copyAllToClipboard() {
+                if (!this.result) return;
+
+                const r = this.result;
+                let text = `Domain: ${r.domain}\n`;
+                if (r.company_name) text += `Company: ${r.company_name}\n`;
+                if (r.owner_name) text += `Owner: ${r.owner_name}\n`;
+                if (r.first_name) text += `First Name: ${r.first_name}\n`;
+                if (r.last_name) text += `Last Name: ${r.last_name}\n`;
+                if (r.emails && r.emails.length) text += `Emails: ${r.emails.join(', ')}\n`;
+                if (r.phones && r.phones.length) text += `Phones: ${r.phones.join(', ')}\n`;
+                if (r.linkedin_url) text += `LinkedIn: ${r.linkedin_url}\n`;
+                if (r.registrar) text += `Registrar: ${r.registrar}\n`;
+                if (r.registrant_org) text += `Organization: ${r.registrant_org}\n`;
+                if (r.creation_date) text += `Created: ${r.creation_date}\n`;
+                if (r.expiration_date) text += `Expires: ${r.expiration_date}\n`;
+
+                navigator.clipboard.writeText(text).then(() => {
+                    this.showToast('All results copied to clipboard!');
+                });
+            },
+
+            exportToCSV() {
+                if (!this.result) return;
+
+                const r = this.result;
+                const headers = ['Domain', 'Company', 'Owner Name', 'First Name', 'Last Name', 'Emails', 'Phones', 'LinkedIn', 'Registrar', 'Organization', 'Created', 'Expires'];
+                const values = [
+                    r.domain || '',
+                    r.company_name || '',
+                    r.owner_name || '',
+                    r.first_name || '',
+                    r.last_name || '',
+                    (r.emails || []).join('; '),
+                    (r.phones || []).join('; '),
+                    r.linkedin_url || '',
+                    r.registrar || '',
+                    r.registrant_org || '',
+                    r.creation_date || '',
+                    r.expiration_date || ''
+                ];
+
+                // Escape CSV values
+                const escapeCSV = (val) => `"${String(val).replace(/"/g, '""')}"`;
+
+                const csv = headers.map(escapeCSV).join(',') + '\n' + values.map(escapeCSV).join(',');
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `domain_${r.domain.replace('.', '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            },
+
+            showToast(message) {
+                // Simple toast notification
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 px-6 py-3 bg-gray-900 text-white rounded-lg shadow-lg z-50 transform transition-all duration-300';
+                toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-y-2');
+                    setTimeout(() => toast.remove(), 300);
+                }, 2000);
+            }
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block title %}Fetch New Leads - Lead Generation{% endblock %}
+{% block page_title %}Fetch & Enrich Leads{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header Card -->
+    <div class="rounded-2xl bg-gradient-to-r from-primary-500 to-primary-700 p-8 text-white shadow-xl">
+        <div class="flex items-center gap-6">
+            <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+                <i class="fas fa-download text-4xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold">Fetch & Enrich Business Leads</h2>
+                <p class="text-primary-100 mt-1">Complete pipeline: Scrape → Serper (Owner) → Apify (Contacts)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fetch Form -->
+    <div class="rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
+        <form method="POST" action="{{ url_for('do_fetch') }}" x-data="{ loading: false }" @submit="loading = true">
+
+            <!-- Pipeline Steps Info -->
+            <div class="mb-8 p-4 bg-gray-50 rounded-xl">
+                <h4 class="font-semibold text-gray-800 mb-3">
+                    <i class="fas fa-project-diagram text-primary-500 mr-2"></i>Data Pipeline
+                </h4>
+                <div class="flex items-center gap-2 text-sm">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                        <i class="fas fa-spider"></i>
+                        <span>1. Scrape</span>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-400"></i>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg">
+                        <i class="fas fa-search"></i>
+                        <span>2. Serper (Owner)</span>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-400"></i>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg">
+                        <i class="fas fa-user-check"></i>
+                        <span>3. Apify (Contacts)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State Selection -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-map-marker-alt text-primary-500 mr-2"></i>Select States
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="DE" checked class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 
+                                         peer-checked:bg-primary-500 text-xl font-bold text-gray-600 
+                                         peer-checked:text-white mb-2 transition-all">DE</span>
+                            <span class="text-sm font-medium text-gray-700">Delaware</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="CA" checked class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">CA</span>
+                            <span class="text-sm font-medium text-gray-700">California</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="TX" checked class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">TX</span>
+                            <span class="text-sm font-medium text-gray-700">Texas</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="NY" checked class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">NY</span>
+                            <span class="text-sm font-medium text-gray-700">New York</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="FL" checked class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">FL</span>
+                            <span class="text-sm font-medium text-gray-700">Florida</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="IL" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">IL</span>
+                            <span class="text-sm font-medium text-gray-700">Illinois</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="GA" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">GA</span>
+                            <span class="text-sm font-medium text-gray-700">Georgia</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="NC" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">NC</span>
+                            <span class="text-sm font-medium text-gray-700">N. Carolina</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="WA" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">WA</span>
+                            <span class="text-sm font-medium text-gray-700">Washington</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="NJ" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">NJ</span>
+                            <span class="text-sm font-medium text-gray-700">New Jersey</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="PA" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">PA</span>
+                            <span class="text-sm font-medium text-gray-700">Pennsylvania</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="OH" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">OH</span>
+                            <span class="text-sm font-medium text-gray-700">Ohio</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="VA" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">VA</span>
+                            <span class="text-sm font-medium text-gray-700">Virginia</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="AZ" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">AZ</span>
+                            <span class="text-sm font-medium text-gray-700">Arizona</span>
+                        </div>
+                    </label>
+
+                    <label class="relative">
+                        <input type="checkbox" name="states" value="CO" class="peer sr-only">
+                        <div class="flex flex-col items-center p-4 rounded-xl border-2 border-gray-200 cursor-pointer 
+                                    peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                            <span
+                                class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xl font-bold text-gray-600 mb-2">CO</span>
+                            <span class="text-sm font-medium text-gray-700">Colorado</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Records per State -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-sliders-h text-primary-500 mr-2"></i>Records per State
+                </h3>
+                <div class="flex items-center gap-6">
+                    <input type="range" name="limit" id="limit" min="5" max="100" step="5" value="20"
+                        class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-500"
+                        oninput="document.getElementById('limitValue').textContent = this.value">
+                    <div class="flex items-center gap-2">
+                        <span id="limitValue" class="text-2xl font-bold text-primary-600">20</span>
+                        <span class="text-gray-500">records</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Sources & Enrichment Options -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-globe text-primary-500 mr-2"></i>Data Sources & Enrichment
+                </h3>
+                <div class="space-y-3">
+                    <!-- SEC EDGAR -->
+                    <label
+                        class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-300 cursor-pointer transition-all">
+                        <input type="checkbox" name="use_sec" value="on" checked
+                            class="w-5 h-5 rounded text-primary-500 focus:ring-primary-500">
+                        <div class="flex-1">
+                            <span class="font-medium text-gray-900">SEC EDGAR (Free)</span>
+                            <p class="text-sm text-gray-500">Public company filings - free, no API key needed</p>
+                        </div>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">Step 1</span>
+                    </label>
+
+                    <!-- Serper -->
+                    <label
+                        class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-green-300 cursor-pointer transition-all">
+                        <input type="checkbox" name="use_serper" value="on" {{ 'checked' if serper_configured else '' }}
+                            class="w-5 h-5 rounded text-green-500 focus:ring-green-500">
+                        <div class="flex-1">
+                            <span class="font-medium text-gray-900">Serper - Owner Lookup</span>
+                            <p class="text-sm text-gray-500">Google search to find business owner names and websites</p>
+                            {% if not serper_configured %}
+                            <p class="text-xs text-orange-600 mt-1"><i
+                                    class="fas fa-exclamation-triangle mr-1"></i>SERPER_API_KEY not set</p>
+                            {% endif %}
+                        </div>
+                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">Step 2</span>
+                    </label>
+
+                    <!-- Apify -->
+                    <label
+                        class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-purple-300 cursor-pointer transition-all">
+                        <input type="checkbox" name="use_apify" value="on" {{ 'checked' if apify_configured else '' }}
+                            class="w-5 h-5 rounded text-purple-500 focus:ring-purple-500">
+                        <div class="flex-1">
+                            <span class="font-medium text-gray-900">Apify Skip Trace - Contact Enrichment</span>
+                            <p class="text-sm text-gray-500">Get emails, phones, names, age from business owner data</p>
+                            <p class="text-xs text-gray-400 mt-1">$7/1000 lookups - Gets: First/Last Name, Phone 1-2,
+                                Email 1-5, Age</p>
+                            {% if not apify_configured %}
+                            <p class="text-xs text-orange-600 mt-1"><i
+                                    class="fas fa-exclamation-triangle mr-1"></i>APIFY_TOKEN not set</p>
+                            {% endif %}
+                        </div>
+                        <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">Step 3</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end">
+                <button type="submit" :disabled="loading" class="px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl 
+                               hover:from-primary-600 hover:to-primary-700 transition-all font-semibold text-lg
+                               shadow-lg shadow-primary-200 disabled:opacity-50 disabled:cursor-not-allowed
+                               flex items-center gap-3">
+                    <template x-if="!loading">
+                        <span><i class="fas fa-rocket mr-2"></i>Fetch & Enrich Leads</span>
+                    </template>
+                    <template x-if="loading">
+                        <span class="flex items-center gap-2">
+                            <div class="spinner"></div>
+                            Processing Pipeline...
+                        </span>
+                    </template>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-xl bg-blue-50 p-5 border border-blue-100">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-building text-blue-600"></i>
+                <h4 class="font-semibold text-blue-900">Step 1: Scraping</h4>
+            </div>
+            <p class="text-sm text-blue-700">Gets business name, address, phone from SEC EDGAR and state registries.</p>
+        </div>
+
+        <div class="rounded-xl bg-green-50 p-5 border border-green-100">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-search text-green-600"></i>
+                <h4 class="font-semibold text-green-900">Step 2: Serper</h4>
+            </div>
+            <p class="text-sm text-green-700">Google search finds owner/founder names and business websites.</p>
+        </div>
+
+        <div class="rounded-xl bg-purple-50 p-5 border border-purple-100">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-user-check text-purple-600"></i>
+                <h4 class="font-semibold text-purple-900">Step 3: Apify</h4>
+            </div>
+            <p class="text-sm text-purple-700">Skip trace gets emails, multiple phones, age, and complete contact
+                details.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

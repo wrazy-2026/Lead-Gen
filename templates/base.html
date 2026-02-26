@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lead Generation Dashboard{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        dark: {
+                            900: '#0a0a1a',
+                            800: '#0f0f23',
+                            700: '#161638',
+                            600: '#1a1a4e',
+                        },
+                        pink: {
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                        },
+                        fuchsia: {
+                            400: '#e879f9',
+                            500: '#d946ef',
+                            600: '#c026d3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom scrollbar - Dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f0f23;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #f472b6, #a78bfa);
+        }
+
+        /* DataTables custom styling */
+        .dataTables_wrapper {
+            padding: 0;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            outline: none;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+        }
+
+        table.dataTable thead th {
+            border-bottom: 2px solid #e2e8f0 !important;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        table.dataTable tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: linear-gradient(to bottom, #3b82f6, #2563eb) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 0.5rem;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #374151 !important;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes pulse-soft {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .animate-pulse-soft {
+            animation: pulse-soft 2s ease-in-out infinite;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Gradient backgrounds */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-bg-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        /* Pink-Blue gradient effects */
+        .gradient-pink-blue {
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%);
+        }
+
+        .gradient-text-pink {
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Glass morphism for dark theme */
+        .glass-dark {
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Glow effects */
+        .glow-pink {
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.3),
+                0 0 60px rgba(217, 70, 239, 0.2);
+        }
+
+        .glow-blue {
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3),
+                0 0 60px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Card glow on hover */
+        .card-glow:hover {
+            box-shadow: 0 10px 40px rgba(236, 72, 153, 0.15),
+                0 0 20px rgba(139, 92, 246, 0.1);
+            border-color: rgba(236, 72, 153, 0.3);
+        }
+
+        /* Gradient border */
+        .gradient-border {
+            position: relative;
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.5), rgba(139, 92, 246, 0.5));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        /* Dark DataTables styling */
+        .dark-theme .dataTables_wrapper .dataTables_filter input {
+            background: rgba(15, 15, 35, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .dark-theme .dataTables_wrapper .dataTables_length select {
+            background: rgba(15, 15, 35, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .dark-theme table.dataTable thead th {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+            color: #e5e7eb;
+        }
+
+        .dark-theme table.dataTable tbody tr {
+            background: transparent;
+            color: #e5e7eb;
+        }
+
+        .dark-theme table.dataTable tbody tr:hover {
+            background: rgba(236, 72, 153, 0.05) !important;
+        }
+
+        .dark-theme .dataTables_wrapper .dataTables_info,
+        .dark-theme .dataTables_wrapper .dataTables_length label,
+        .dark-theme .dataTables_wrapper .dataTables_filter label {
+            color: #9ca3af;
+        }
+
+        .dark-theme .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #9ca3af !important;
+        }
+
+        .dark-theme .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6) !important;
+            color: white !important;
+            border: none !important;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="h-full bg-[#0a0a1a] dark-theme">
+    <!-- Update Notification Popup -->
+    <div id="updatePopup" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] hidden">
+        <div class="bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-emerald-400/30 animate-[fadeIn_0.3s_ease-out]"
+            style="box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.35);">
+            <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                <i class="fas fa-sparkles text-white text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-white">System Updated Successfully!</h3>
+                <p class="text-emerald-100 text-sm">Version <span id="appVersionDisplay">2.3.0</span> is now live with
+                    new features</p>
+            </div>
+            <button onclick="closeUpdatePopup()" class="ml-2 p-2 rounded-full hover:bg-white/20 transition-colors">
+                <i class="fas fa-times text-white"></i>
+            </button>
+        </div>
+    </div>
+    <script>
+        const APP_VERSION = '2.3.0';
+        function closeUpdatePopup() {
+            document.getElementById('updatePopup').classList.add('hidden');
+        }
+        (function () {
+            const lastVersion = localStorage.getItem('app_version');
+            if (lastVersion && lastVersion !== APP_VERSION) {
+                document.getElementById('updatePopup').classList.remove('hidden');
+                document.getElementById('appVersionDisplay').textContent = APP_VERSION;
+                setTimeout(closeUpdatePopup, 5000);
+            }
+            localStorage.setItem('app_version', APP_VERSION);
+        })();
+    </script>
+
+    <div class="min-h-full" x-data="{ sidebarOpen: false }">
+        <!-- Mobile sidebar backdrop -->
+        <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900/80 z-40 lg:hidden"
+            @click="sidebarOpen = false"></div>
+
+        <!-- Mobile sidebar -->
+        <div x-show="sidebarOpen" x-transition:enter="transition ease-in-out duration-300 transform"
+            x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="-translate-x-full" class="fixed inset-y-0 left-0 z-50 w-72 bg-[#0f0f23] lg:hidden">
+            {% include 'partials/sidebar_content.html' %}
+        </div>
+
+        <!-- Desktop sidebar -->
+        <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+            <div class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-white/10 bg-[#0f0f23] px-6 pb-4">
+                {% include 'partials/sidebar_content.html' %}
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="lg:pl-72">
+            <!-- Top navigation -->
+            <div
+                class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-white/10 bg-[#0f0f23]/90 backdrop-blur-lg px-4 shadow-lg sm:gap-x-6 sm:px-6 lg:px-8">
+                <!-- Mobile menu button -->
+                <button type="button" class="-m-2.5 p-2.5 text-gray-300 lg:hidden" @click="sidebarOpen = true">
+                    <span class="sr-only">Open sidebar</span>
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+
+                <!-- Separator -->
+                <div class="h-6 w-px bg-white/10 lg:hidden"></div>
+
+                <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                    <!-- Search (optional) -->
+                    <div class="flex flex-1 items-center">
+                        <h1 class="text-lg font-semibold text-white">{% block page_title %}Dashboard{% endblock %}
+                        </h1>
+                    </div>
+
+                    <!-- Right side actions -->
+                    <div class="flex items-center gap-x-4 lg:gap-x-6">
+                        <!-- Notification bell -->
+                        <button type="button"
+                            class="relative -m-2.5 p-2.5 text-gray-400 hover:text-pink-400 transition-colors">
+                            <span class="sr-only">View notifications</span>
+                            <i class="fas fa-bell text-xl"></i>
+                        </button>
+
+                        <!-- Profile dropdown -->
+                        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                            <button type="button" @click="open = !open" class="flex items-center gap-x-3 text-sm">
+                                {% if current_user.is_authenticated and current_user.picture %}
+                                <img src="{{ current_user.picture }}" alt="Profile" class="h-8 w-8 rounded-full">
+                                {% else %}
+                                <div class="h-8 w-8 rounded-full gradient-bg-blue flex items-center justify-center">
+                                    <span class="text-white font-medium">{{ current_user.name[0] if
+                                        current_user.is_authenticated else 'U' }}</span>
+                                </div>
+                                {% endif %}
+                                <span class="hidden lg:flex lg:items-center">
+                                    <span class="text-sm font-medium text-gray-200">{{ current_user.name if
+                                        current_user.is_authenticated else 'User' }}</span>
+                                    <i class="fas fa-chevron-down ml-2 text-xs text-gray-400"></i>
+                                </span>
+                            </button>
+
+                            <!-- Dropdown menu -->
+                            <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-48 origin-top-right rounded-lg bg-[#161638] border border-white/10 py-1 shadow-2xl focus:outline-none z-50">
+                                <div class="px-4 py-3 border-b border-white/10">
+                                    <p class="text-sm font-medium text-white">{{ current_user.name if
+                                        current_user.is_authenticated else 'User' }}</p>
+                                    <p class="text-xs text-gray-400 truncate">{{ current_user.email if
+                                        current_user.is_authenticated else '' }}</p>
+                                </div>
+                                {% if current_user.is_authenticated and current_user.is_admin %}
+                                <a href="{{ url_for('admin_dashboard') }}"
+                                    class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-pink-400 transition-colors">
+                                    <i class="fas fa-shield-alt mr-2 text-purple-400"></i>Admin Dashboard
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('settings') }}"
+                                    class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-pink-400 transition-colors">
+                                    <i class="fas fa-cog mr-2 text-gray-400"></i>Settings
+                                </a>
+                                <a href="{{ url_for('logout') }}"
+                                    class="block px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Sign Out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page content -->
+            <main class="py-6">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    <div
+                        class="mb-4 animate-fade-in rounded-lg p-4 backdrop-blur-lg {% if category == 'success' %}bg-green-500/10 text-green-400 border border-green-500/30{% elif category == 'error' %}bg-red-500/10 text-red-400 border border-red-500/30{% else %}bg-pink-500/10 text-pink-400 border border-pink-500/30{% endif %}">
+                        <div class="flex items-center">
+                            <i
+                                class="{% if category == 'success' %}fas fa-check-circle text-green-400{% elif category == 'error' %}fas fa-exclamation-circle text-red-400{% else %}fas fa-info-circle text-pink-400{% endif %} mr-3"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

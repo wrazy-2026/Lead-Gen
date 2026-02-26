@@ -1,0 +1,54 @@
+# Environments
+.env*
+! .env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Databases
+*.sqlite3
+*.db
+
+# Secrets
+credentials.json
+sheets-exporter-key.json
+*-key.json
+
+# Frontend
+**/node_modules/
+**/dist/
+**/build/
+.parcel-cache
+.cache
+.eslintcache
+
+# Project
+referance project/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Lead Generation{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div
+        class="rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-8 text-white shadow-xl glow-pink">
+        <div class="flex items-center gap-6">
+            <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+                <i class="fas fa-cog text-4xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold">Settings</h2>
+                <p class="text-pink-100 mt-1">Configure your lead generation application</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Info -->
+    <div class="rounded-2xl bg-[#161638] p-6 border border-white/10">
+        <h3 class="text-lg font-semibold text-white mb-4">
+            <i class="fas fa-database text-pink-400 mr-2"></i>Database
+        </h3>
+
+        {% if not db_stats.is_persistent %}
+        <div class="mb-4 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-exclamation-triangle text-yellow-400 mt-0.5"></i>
+                <div>
+                    <p class="text-yellow-400 font-medium">Data Not Persistent</p>
+                    <p class="text-yellow-300/80 text-sm mt-1">Using SQLite which stores data locally. Data will be lost
+                        on redeploy. Set DATABASE_URL environment variable to use PostgreSQL for persistent storage.</p>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="mb-4 p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-check-circle text-green-400 mt-0.5"></i>
+                <div>
+                    <p class="text-green-400 font-medium">Persistent Storage Active</p>
+                    <p class="text-green-300/80 text-sm mt-1">Your data is stored in {{ db_stats.db_type_display }} and
+                        will persist across redeployments.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-white/5 rounded-lg border border-white/10">
+                <p class="text-sm text-gray-400 mb-1">Database Type</p>
+                <p class="text-lg font-semibold text-white">{{ db_stats.db_type_display }}</p>
+            </div>
+            <div class="p-4 bg-white/5 rounded-lg border border-white/10">
+                <p class="text-sm text-gray-400 mb-1">Total Records</p>
+                <p class="text-lg font-semibold text-white">{{ db_stats.total_records }}</p>
+            </div>
+        </div>
+
+        <div class="mt-4 flex gap-3">
+            <form method="POST" action="{{ url_for('cleanup_placeholder_data') }}">
+                <button type="submit"
+                    class="px-4 py-2 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/30 transition-colors font-medium text-sm">
+                    <i class="fas fa-broom mr-2"></i>Clean Invalid Data
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('clear_database') }}"
+                onsubmit="return confirm('Are you sure you want to delete ALL leads? This cannot be undone.');">
+                <button type="submit"
+                    class="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors font-medium text-sm">
+                    <i class="fas fa-trash-alt mr-2"></i>Clear All Data
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- GoHighLevel Integration -->
+    <div class="rounded-2xl bg-[#161638] p-6 border border-white/10">
+        <h3 class="text-lg font-semibold text-white mb-4">
+            <i class="fas fa-paper-plane text-pink-400 mr-2"></i>GoHighLevel Integration
+        </h3>
+
+        <form method="POST" action="{{ url_for('save_ghl_settings') }}" class="space-y-4">
+            <div>
+                <label for="ghl_webhook_url" class="block text-sm font-medium text-gray-300 mb-1">Webhook URL</label>
+                <input type="url" name="ghl_webhook_url" id="ghl_webhook_url"
+                    value="{{ ghl_settings.webhook_url or '' }}"
+                    placeholder="https://services.leadconnectorhq.com/hooks/..."
+                    class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                <p class="text-xs text-gray-400 mt-1">Get this from your GHL sub-account: Automation > Webhooks</p>
+            </div>
+
+            <div>
+                <label for="ghl_tag" class="block text-sm font-medium text-gray-300 mb-1">Default Tag</label>
+                <input type="text" name="ghl_tag" id="ghl_tag" value="{{ ghl_settings.tag or 'lead_scraper' }}"
+                    placeholder="lead_scraper"
+                    class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                <p class="text-xs text-gray-400 mt-1">Tag to apply to imported contacts in GHL</p>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button type="submit"
+                    class="px-4 py-2 gradient-pink-blue text-white rounded-lg hover:opacity-90 transition-opacity font-medium text-sm">
+                    <i class="fas fa-save mr-2"></i>Save GHL Settings
+                </button>
+                {% if ghl_settings.webhook_url %}
+                <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                    <i class="fas fa-check-circle mr-1"></i>Configured
+                </span>
+                {% else %}
+                <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>Not Configured
+                </span>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- Test Webhook Button -->
+        {% if ghl_settings.webhook_url %}
+        <div class="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg border border-purple-500/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h4 class="font-semibold text-purple-300">Test Your Webhook</h4>
+                    <p class="text-sm text-purple-200 mt-1">Send sample lead data to verify your GHL integration is
+                        working correctly.</p>
+                </div>
+                <button type="button" onclick="sendSampleData()" id="send-sample-btn"
+                    class="px-4 py-2 gradient-pink-blue text-white rounded-lg hover:opacity-90 transition-opacity font-medium text-sm flex items-center gap-2">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Send Sample Data</span>
+                </button>
+            </div>
+            <div id="sample-data-result" class="mt-3 hidden">
+                <div id="sample-success"
+                    class="hidden p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-green-300 text-sm">
+                    <i class="fas fa-check-circle mr-2"></i><span class="font-medium">Success!</span> Sample data sent
+                    to GHL.
+                </div>
+                <div id="sample-error"
+                    class="hidden p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm">
+                    <i class="fas fa-exclamation-circle mr-2"></i><span class="font-medium">Error:</span> <span
+                        id="sample-error-msg"></span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-4 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+            <h4 class="font-semibold text-blue-300 mb-2">How to get your GHL Webhook URL:</h4>
+            <ol class="text-sm text-blue-200 space-y-1 list-decimal list-inside">
+                <li>Log in to your GoHighLevel account</li>
+                <li>Go to Automation > Triggers</li>
+                <li>Create a new Trigger with "Inbound Webhook" as the trigger type</li>
+                <li>Copy the webhook URL provided</li>
+                <li>Paste it in the field above</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Google Sheets Configuration -->
+    <div class="rounded-2xl bg-[#161638] p-6 border border-white/10">
+        <h3 class="text-lg font-semibold text-white mb-4">
+            <i class="fab fa-google text-pink-400 mr-2"></i>Google Sheets Integration
+        </h3>
+
+        {% if sheets_authenticated %}
+        <!-- Connected State -->
+        <div class="flex items-center gap-4 mb-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500/20">
+                <i class="fas fa-check-circle text-green-400 text-xl"></i>
+            </div>
+            <div class="flex-1">
+                <p class="font-semibold text-green-300">Connected to Google Sheets</p>
+                <p class="text-sm text-gray-400">You can export leads directly to Google Sheets</p>
+            </div>
+            <form method="POST" action="{{ url_for('google_disconnect') }}">
+                <button type="submit"
+                    class="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors font-medium text-sm">
+                    <i class="fas fa-unlink mr-2"></i>Disconnect
+                </button>
+            </form>
+        </div>
+        <div class="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+            <p class="text-sm text-green-300">
+                <i class="fas fa-info-circle mr-2"></i>
+                Go to <a href="{{ url_for('leads') }}" class="underline font-medium text-green-200 hover:text-white">All
+                    Leads</a> and click "Google Sheets" to export.
+            </p>
+        </div>
+        {% elif sheets_configured %}
+        <!-- Configured but needs OAuth -->
+        <div class="flex items-center gap-4 mb-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/20">
+                <i class="fas fa-exclamation-circle text-yellow-400 text-xl"></i>
+            </div>
+            <div class="flex-1">
+                <p class="font-semibold text-yellow-300">One-Time Setup Required</p>
+                <p class="text-sm text-gray-400">Click Connect to authorize Google Sheets access</p>
+            </div>
+            <a href="{{ url_for('google_connect') }}"
+                class="px-4 py-2 gradient-pink-blue text-white rounded-lg hover:opacity-90 transition-opacity font-medium text-sm inline-flex items-center">
+                <i class="fab fa-google mr-2"></i>Connect Google
+            </a>
+        </div>
+        <div class="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+            <p class="text-sm text-blue-300">
+                <i class="fas fa-shield-alt mr-2"></i>
+                This opens a Google sign-in page. We only request access to create and manage spreadsheets.
+            </p>
+        </div>
+        {% else %}
+        <!-- Not configured - Use GHL instead -->
+        <div class="flex items-center gap-4 mb-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-500/20">
+                <i class="fas fa-cloud text-gray-400 text-xl"></i>
+            </div>
+            <div>
+                <p class="font-semibold text-gray-300">Google Sheets (Optional)</p>
+                <p class="text-sm text-gray-400">Use GoHighLevel export instead - faster and simpler!</p>
+            </div>
+        </div>
+        <div class="p-4 bg-pink-500/10 rounded-lg border border-pink-500/20">
+            <p class="text-sm text-pink-300">
+                <i class="fas fa-rocket mr-2"></i>
+                <strong>Tip:</strong> The GHL integration above exports leads automatically with one click!
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Scraper Status -->
+    <div class="rounded-2xl bg-[#161638] p-6 border border-white/10">
+        <h3 class="text-lg font-semibold text-white mb-4">
+            <i class="fas fa-spider text-pink-400 mr-2"></i>Scraper Status
+        </h3>
+
+        <div class="overflow-hidden rounded-lg border border-white/10">
+            <table class="w-full">
+                <thead class="bg-white/5">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">State</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Scraper</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    <tr class="hover:bg-white/5">
+                        <td class="px-4 py-3 text-sm font-medium text-white">Delaware (DE)</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">MockScraper</td>
+                        <td class="px-4 py-3">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                                Active
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-white/5">
+                        <td class="px-4 py-3 text-sm font-medium text-white">California (CA)</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">MockScraper</td>
+                        <td class="px-4 py-3">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                                Active
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-white/5">
+                        <td class="px-4 py-3 text-sm font-medium text-white">Texas (TX)</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">MockScraper</td>
+                        <td class="px-4 py-3">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                                Active
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-white/5">
+                        <td class="px-4 py-3 text-sm font-medium text-white">New York (NY)</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">MockScraper</td>
+                        <td class="px-4 py-3">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                                Active
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-white/5">
+                        <td class="px-4 py-3 text-sm font-medium text-white">Florida (FL)</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">MockScraper</td>
+                        <td class="px-4 py-3">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                                Active
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-sm text-gray-400 mt-4">
+            <i class="fas fa-info-circle mr-1"></i>
+            MockScraper generates realistic test data. Implement real scrapers for production use.
+        </p>
+    </div>
+
+    <!-- About -->
+    <div class="rounded-2xl bg-[#161638] p-6 border border-white/10">
+        <h3 class="text-lg font-semibold text-white mb-4">
+            <i class="fas fa-info-circle text-pink-400 mr-2"></i>About
+        </h3>
+
+        <div class="space-y-2 text-sm text-gray-400">
+            <p><strong class="text-white">Lead Generation Dashboard</strong></p>
+            <p>Version: 1.0.0</p>
+            <p>A web application for tracking newly registered businesses across US states.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function sendSampleData() {
+        const btn = document.getElementById('send-sample-btn');
+        const resultDiv = document.getElementById('sample-data-result');
+        const successDiv = document.getElementById('sample-success');
+        const errorDiv = document.getElementById('sample-error');
+        const errorMsg = document.getElementById('sample-error-msg');
+
+        // Reset
+        resultDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+        errorDiv.classList.add('hidden');
+
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Sending...</span>';
+
+        try {
+            const response = await fetch('/api/ghl-test-webhook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const data = await response.json();
+
+            resultDiv.classList.remove('hidden');
+
+            if (data.success) {
+                successDiv.classList.remove('hidden');
+            } else {
+                errorDiv.classList.remove('hidden');
+                errorMsg.textContent = data.message || 'Failed to send sample data';
+            }
+        } catch (error) {
+            resultDiv.classList.remove('hidden');
+            errorDiv.classList.remove('hidden');
+            errorMsg.textContent = 'Network error: ' + error.message;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> <span>Send Sample Data</span>';
+        }
+    }
+</script>
+{% endblock %}
