@@ -1106,12 +1106,13 @@ def get_database(db_path: str = None):
     """
     global _db_instance
     
-    # Check for Firestore first if configured in environment
-    if os.environ.get('USE_FIRESTORE') == 'true' or firebase_admin._apps:
+    # Check for Firestore first IF explicitly enabled in environment
+    if os.environ.get('USE_FIRESTORE') == 'true':
         try:
             return FirestoreDatabase()
         except Exception as e:
             logger.error(f"Failed to initialize Firestore, falling back to SQL: {e}")
+            # Continue to fallback
 
     if _db_instance is None or (db_path and db_path != _db_instance.db_path):
         _db_instance = Database(db_path)
