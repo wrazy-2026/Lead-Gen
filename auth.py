@@ -45,7 +45,8 @@ class User(UserMixin):
         try:
             # Ensure initialization happens first
             initialize_firebase() 
-            return firestore.client().collection('users')
+            firestore_db_id = (os.environ.get('FIRESTORE_DATABASE_ID') or 'leadgen').strip() or 'leadgen'
+            return firestore.client(database_id=firestore_db_id).collection('users')
         except Exception as e:
             print(f"[Auth] Firestore client error: {e}")
             return None

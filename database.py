@@ -49,7 +49,8 @@ class Database:
     def _init_firebase(self):
         from firebase_setup import initialize_firebase
         initialize_firebase()
-        self.db = firestore.client()
+        firestore_db_id = (os.environ.get('FIRESTORE_DATABASE_ID') or 'leadgen').strip() or 'leadgen'
+        self.db = firestore.client(database_id=firestore_db_id)
         logger.info(f"Firestore client initialized for project: {self.db.project}")
         self.leads_ref = self.db.collection('leads')
 
