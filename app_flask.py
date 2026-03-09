@@ -2102,10 +2102,21 @@ def export_sheets_direct():
         # Use the API exporter with the BEST available token (Session -> Firestore -> File)
         token_dict = get_best_google_token()
         exporter = GoogleSheetsAPIExporter(token_dict=token_dict)
+        oauth_exporter = GoogleSheetsExporter()
         
         if not exporter.is_configured():
             flash('Google Sheets not configured. Go to Settings to connect your Google account.', 'warning')
             return redirect(url_for('settings'))
+
+        if not exporter.is_authenticated():
+            # Start OAuth flow and retry export after callback.
+            session['pending_export'] = {
+                'spreadsheet_id': load_google_settings().get('spreadsheet_id', ''),
+                'worksheet_name': 'Leads'
+            }
+            redirect_uri = request.host_url.rstrip('/') + url_for('oauth2callback')
+            auth_url = oauth_exporter.get_authorization_url(redirect_uri)
+            return redirect(auth_url)
         
         # Load settings to see if we have a target spreadsheet
         google_settings = load_google_settings()
