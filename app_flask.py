@@ -463,6 +463,41 @@ def get_sheets_exporter():
             return old_exporter
         return MockGoogleSheetsExporter()
     return exporter
+
+
+def get_export_leads_df(limit: int = 5000) -> pd.DataFrame:
+    """Load leads for export with the same resilient fallback chain as UI pages."""
+    try:
+        df = db.get_all_leads(limit=limit)
+        if not df.empty:
+            return df
+    except Exception:
+        pass
+
+    try:
+        cached = get_cached_leads(refresh_if_empty=True)
+        if cached:
+            return pd.DataFrame(cached)
+    except Exception:
+        pass
+
+    try:
+        direct = _load_leads_direct_from_firestore(limit=limit)
+        if direct:
+            return pd.DataFrame(direct)
+    except Exception:
+        pass
+
+    try:
+        backup = _load_leads_from_backup_json(limit=limit)
+        if backup:
+            return pd.DataFrame(backup)
+    except Exception:
+        pass
+
+    return pd.DataFrame()
+
+
 def auto_export_to_sheet(leads, sheet_id=None):
     """
     Automatically export leads to Google Sheet if configured.
@@ -1939,7 +1974,7 @@ def export_page():
 def export_csv():
     """Export leads as CSV file."""
     try:
-        df = db.get_all_leads()
+        df = get_export_leads_df(limit=5000)
         
         if df.empty:
             flash('No leads to export', 'warning')
@@ -2058,7 +2093,7 @@ def get_best_google_token():
 def export_sheets_direct():
     """Export leads directly to a new Google Sheet."""
     try:
-        df = db.get_all_leads()
+        df = get_export_leads_df(limit=5000)
         
         if df.empty:
             flash('No leads to export', 'warning')
@@ -2137,7 +2172,11 @@ def export_sheets():
             auth_url = oauth_exporter.get_authorization_url(redirect_uri)
             return redirect(auth_url)
         
-        df = db.get_all_leads()
+        df = get_export_leads_df(limit=5000)
+
+        if df.empty:
+            flash('No leads available to export right now. Please refresh leads and try again.', 'warning')
+            return redirect(url_for('export_page'))
         
         result = api_exporter.export_dataframe(df, spreadsheet_id, worksheet_name)
         
@@ -2193,7 +2232,7 @@ def oauth2callback():
                 # Use API exporter for the actual export
                 token_dict = get_best_google_token()
                 api_exporter = GoogleSheetsAPIExporter(token_dict=token_dict)
-                df = db.get_all_leads()
+                df = get_export_leads_df(limit=5000)
                 result = api_exporter.export_dataframe(
                     df, 
                     pending['spreadsheet_id'], 
