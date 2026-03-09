@@ -37,6 +37,18 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ url_for('states_report') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'states_report' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i
+                            class="fas fa-map-marked-alt text-lg {% if request.endpoint == 'states_report' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        States Report
+                    </a>
+                </li>
+                <li>
                     <a href="{{ url_for('fetch_leads') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
                               {% if request.endpoint == 'fetch_leads' %}
                               bg-pink-500/10 text-pink-400 border border-pink-500/20
