@@ -41,6 +41,38 @@ from pathlib import Path
 # Configure logging
 logger = logging.getLogger(__name__)
 
+
+def _to_sheet_cell(value):
+    """Convert Python/pandas values into scalar Google Sheets cell values."""
+    try:
+        if value is None:
+            return ""
+        if pd.isna(value):
+            return ""
+    except Exception:
+        pass
+
+    if isinstance(value, (str, int, float, bool)):
+        return value
+
+    if isinstance(value, datetime):
+        return value.isoformat(sep=' ', timespec='seconds')
+
+    if isinstance(value, (list, tuple, set, dict)):
+        try:
+            return json.dumps(value, ensure_ascii=False)
+        except Exception:
+            return str(value)
+
+    return str(value)
+
+
+def _sanitize_dataframe_for_sheets(df: pd.DataFrame) -> pd.DataFrame:
+    """Return a copy with all values coerced to Sheets-safe scalar types."""
+    if df is None or df.empty:
+        return pd.DataFrame(columns=df.columns if df is not None else None)
+    return df.applymap(_to_sheet_cell)
+
 # OAuth 2.0 scopes
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -303,7 +335,7 @@ class GoogleSheetsExporter:
         if not available_columns:
             raise ValueError(f"No matching columns found. Available: {df.columns.tolist()}")
         
-        export_df = df[available_columns].copy()
+        export_df = _sanitize_dataframe_for_sheets(df[available_columns].copy())
         
         try:
             # Open the spreadsheet
@@ -712,9 +744,10 @@ class GoogleSheetsAPIExporter:
             except gspread.exceptions.WorksheetNotFound:
                 worksheet = spreadsheet.add_worksheet(title=worksheet_name, rows=1000, cols=26)
             
-            # Use all available columns from the DataFrame instead of a restricted list
+            # Use all available columns from the DataFrame instead of a restricted list.
+            # Coerce nested values (lists/dicts) to JSON strings to avoid API 400 list_value errors.
             available_columns = df.columns.tolist()
-            export_df = df[available_columns].fillna('')
+            export_df = _sanitize_dataframe_for_sheets(df[available_columns])
             
             try:
                 if append:
