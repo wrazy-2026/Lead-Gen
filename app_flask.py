@@ -80,6 +80,75 @@ def df_to_records(df):
     return df.to_dict('records')
 
 
+def _split_owner_name(full_name):
+    """Split owner full name into first and last names."""
+    if not full_name:
+        return None, None
+    cleaned = str(full_name).strip()
+    if not cleaned:
+        return None, None
+    parts = cleaned.split()
+    first_name = parts[0] if parts else None
+    last_name = ' '.join(parts[1:]) if len(parts) > 1 else None
+    return first_name, last_name
+
+
+def _normalize_date(value):
+    """Return YYYY-MM-DD for several common DOB formats; otherwise None."""
+    if not value:
+        return None
+    raw = str(value).strip()
+    if not raw:
+        return None
+
+    formats = [
+        '%Y-%m-%d', '%m/%d/%Y', '%m-%d-%Y', '%Y/%m/%d',
+        '%b %d, %Y', '%B %d, %Y'
+    ]
+    for fmt in formats:
+        try:
+            return datetime.strptime(raw, fmt).strftime('%Y-%m-%d')
+        except ValueError:
+            continue
+    return None
+
+
+def _safe_int(value):
+    """Parse integer values safely."""
+    if value is None or value == '':
+        return None
+    try:
+        return int(str(value).strip())
+    except Exception:
+        return None
+
+
+def _dedupe_non_empty(values):
+    """Return a unique list preserving order and dropping empty values."""
+    out = []
+    seen = set()
+    for item in values or []:
+        value = str(item).strip() if item is not None else ''
+        if not value:
+            continue
+        key = value.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(value)
+    return out
+
+
+def _extract_city_from_address(address):
+    """Best-effort city extraction from an address string."""
+    if not address:
+        return None
+    parts = [p.strip() for p in str(address).split(',') if p.strip()]
+    if len(parts) >= 2:
+        return parts[1]
+    return None
+
+
 # ============================================================================
 # BACKGROUND TASK MANAGEMENT
 # ============================================================================
@@ -3977,6 +4046,222 @@ def api_enrich_leads():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/enrich-data', methods=['POST'])
+def api_enrich_data():
+    """
+    Batch owner enrichment endpoint for Enrich Data tab and scheduled jobs.
+
+    Processes leads where enrichment_status is pending or failed and updates:
+    owner_first_name, owner_last_name, owner_emails, owner_phone_numbers,
+    owner_age, owner_date_of_birth, enrichment_status, enriched_at.
+    """
+    # Allow either logged-in users OR a cron token for scheduled execution.
+    cron_token = os.environ.get('ENRICH_CRON_TOKEN', '').strip()
+    request_token = (request.headers.get('X-Enrich-Token') or '').strip()
+    authorized = current_user.is_authenticated or (cron_token and request_token and request_token == cron_token)
+    if not authorized:
+        return jsonify({'success': False, 'error': 'Authentication required'}), 401
+
+    payload = request.get_json(silent=True) or {}
+    batch_size = min(max(int(payload.get('batch_size', 25)), 1), 100)
+    statuses = payload.get('statuses') or ['pending', 'failed']
+    use_apify = bool(payload.get('use_apify', True))
+
+    leads_df = db.get_leads_for_enrichment(limit=batch_size, statuses=statuses)
+    if leads_df.empty:
+        return jsonify({
+            'success': True,
+            'message': 'No pending or failed records to enrich.',
+            'processed': 0,
+            'completed': 0,
+            'failed': 0
+        })
+
+    serper = get_serper_service()
+    gemini = get_gemini_service()
+    apify = get_enricher(use_mock=False, use_apify=True) if use_apify else None
+
+    serper_ready = bool(serper and serper.is_configured())
+    apify_ready = bool(apify and getattr(apify, 'api_token', None))
+
+    leads = leads_df.to_dict('records')
+    processed = 0
+    completed = 0
+    failed = 0
+    results = []
+
+    for lead in leads:
+        lead_id = str(lead.get('id', '')).strip()
+        if not lead_id:
+            continue
+
+        processed += 1
+        db.update_lead_enrichment(lead_id, {
+            'enrichment_status': 'processing',
+            'enrichment_error': None
+        })
+
+        try:
+            business_name = lead.get('business_name', '')
+            state = (lead.get('state') or '').upper()
+            address = lead.get('business_address') or lead.get('address') or ''
+            phone = lead.get('business_phone') or lead.get('phone') or ''
+
+            owner_name = (lead.get('owner_name') or '').strip() or None
+            owner_first_name = (lead.get('owner_first_name') or lead.get('first_name') or '').strip() or None
+            owner_last_name = (lead.get('owner_last_name') or lead.get('last_name') or '').strip() or None
+
+            owner_emails = []
+            owner_phones = []
+            owner_age = None
+            owner_dob = None
+
+            update_data = {}
+
+            # Step 1: Serper owner/website discovery
+            if serper_ready:
+                serper_result = serper.search_business_owner(
+                    business_name=business_name,
+                    state=state,
+                    address=address,
+                    phone=phone
+                )
+                if serper_result:
+                    if serper_result.owner_name and not owner_name:
+                        owner_name = serper_result.owner_name
+                    if serper_result.website:
+                        update_data['website'] = serper_result.website
+                        update_data['serper_website'] = serper_result.website
+                    if serper_result.domain:
+                        update_data['serper_domain'] = serper_result.domain
+                    if serper_result.business_category and not lead.get('industry_category'):
+                        update_data['industry_category'] = serper_result.business_category
+
+            # Step 2: Gemini fallback to parse owner name from Serper snippets
+            if not owner_name and serper_ready and gemini and getattr(gemini, 'model', None):
+                try:
+                    raw = serper.raw_search(f'"{business_name}" {state} owner OR founder OR CEO')
+                    if raw:
+                        prompt = (
+                            'Extract the most likely owner/founder full name for this business from these search results. '
+                            'Return ONLY JSON in the form {"owner_name": "..."}. '
+                            'If unknown return {"owner_name": null}.\n\n'
+                            f'Business: {business_name}\nState: {state}\nResults: {str(raw)[:2800]}'
+                        )
+                        gemini_text = gemini.generate_text(prompt) or ''
+                        parsed_name = None
+                        try:
+                            response_text = gemini_text.strip()
+                            if '```' in response_text:
+                                response_text = response_text.split('```')[1]
+                                if response_text.startswith('json'):
+                                    response_text = response_text[4:]
+                            parsed = json.loads(response_text.strip())
+                            parsed_name = parsed.get('owner_name')
+                        except Exception:
+                            parsed_name = None
+
+                        if parsed_name:
+                            owner_name = str(parsed_name).strip()
+                except Exception:
+                    pass
+
+            # Split owner name if needed
+            if owner_name and (not owner_first_name or not owner_last_name):
+                split_first, split_last = _split_owner_name(owner_name)
+                owner_first_name = owner_first_name or split_first
+                owner_last_name = owner_last_name or split_last
+
+            # Step 3: Apify deep enrichment for emails/phones/age/dob
+            if apify_ready:
+                city = _extract_city_from_address(address)
+                query_name = owner_name or business_name
+                apify_rows = apify.skip_trace_by_name(query_name, city=city, state=state, max_results=1)
+                if apify_rows:
+                    row = apify_rows[0]
+                    apify_first = (row.get('First Name') or '').strip() or None
+                    apify_last = (row.get('Last Name') or '').strip() or None
+
+                    if not owner_name and (apify_first or apify_last):
+                        owner_name = f"{apify_first or ''} {apify_last or ''}".strip()
+                    owner_first_name = owner_first_name or apify_first
+                    owner_last_name = owner_last_name or apify_last
+
+                    owner_emails = _dedupe_non_empty([
+                        row.get('Email-1'), row.get('Email-2'), row.get('Email-3'),
+                        row.get('Email-4'), row.get('Email-5'), lead.get('email')
+                    ])
+                    owner_phones = _dedupe_non_empty([
+                        row.get('Phone-1'), row.get('Phone-2'), lead.get('phone'), lead.get('business_phone')
+                    ])
+
+                    owner_age = _safe_int(row.get('Age'))
+                    owner_dob = _normalize_date(row.get('DOB') or row.get('Date of Birth'))
+
+            # Build canonical update payload
+            if owner_name:
+                update_data['owner_name'] = owner_name
+            update_data['owner_first_name'] = owner_first_name
+            update_data['owner_last_name'] = owner_last_name
+            update_data['owner_emails'] = owner_emails
+            update_data['owner_phone_numbers'] = owner_phones
+            update_data['owner_age'] = owner_age
+            update_data['owner_date_of_birth'] = owner_dob
+
+            # Keep existing primary fields synced for current UI/export compatibility
+            if owner_emails and not lead.get('email'):
+                update_data['email'] = owner_emails[0]
+            if owner_phones and not lead.get('phone'):
+                update_data['phone'] = owner_phones[0]
+
+            meaningful = any([
+                update_data.get('owner_name'),
+                bool(update_data.get('owner_emails')),
+                bool(update_data.get('owner_phone_numbers')),
+                update_data.get('owner_date_of_birth'),
+                update_data.get('owner_age') is not None,
+                update_data.get('website')
+            ])
+
+            if meaningful:
+                update_data['enrichment_status'] = 'completed'
+                update_data['enriched_at'] = datetime.now().isoformat()
+                update_data['enrichment_error'] = None
+                db.update_lead_enrichment(lead_id, update_data)
+                completed += 1
+                results.append({'id': lead_id, 'status': 'completed'})
+            else:
+                db.update_lead_enrichment(lead_id, {
+                    'enrichment_status': 'failed',
+                    'enrichment_error': 'No owner/contact signals found',
+                    'enriched_at': None
+                })
+                failed += 1
+                results.append({'id': lead_id, 'status': 'failed'})
+
+        except Exception as e:
+            db.update_lead_enrichment(lead_id, {
+                'enrichment_status': 'failed',
+                'enrichment_error': str(e),
+                'enriched_at': None
+            })
+            failed += 1
+            results.append({'id': lead_id, 'status': 'failed', 'error': str(e)})
+
+    invalidate_cache()
+
+    return jsonify({
+        'success': True,
+        'processed': processed,
+        'completed': completed,
+        'failed': failed,
+        'batch_size': batch_size,
+        'serper_configured': serper_ready,
+        'apify_configured': apify_ready,
+        'results': results
+    })
 
 
 @app.route('/api/find-domains', methods=['POST'])

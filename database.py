@@ -169,7 +169,15 @@ class Database:
                 "business_address": record_dict.get("business_address"),
                 "business_phone": record_dict.get("business_phone"),
                 "mailing_address": record_dict.get("mailing_address"),
-                "fetched_at": fetched_at
+                "fetched_at": fetched_at,
+                "owner_first_name": record_dict.get("owner_first_name"),
+                "owner_last_name": record_dict.get("owner_last_name"),
+                "owner_emails": record_dict.get("owner_emails") or [],
+                "owner_phone_numbers": record_dict.get("owner_phone_numbers") or [],
+                "owner_age": record_dict.get("owner_age"),
+                "owner_date_of_birth": record_dict.get("owner_date_of_birth"),
+                "enrichment_status": record_dict.get("enrichment_status") or "pending",
+                "enriched_at": record_dict.get("enriched_at")
             }
             
             batch.set(self.leads_ref.document(doc_id), data)
@@ -417,6 +425,35 @@ class Database:
             return df[final_mask].head(limit)
         except Exception as e:
             logger.error(f"Error getting unenriched leads: {e}")
+            return pd.DataFrame()
+
+    @prevent_hang(timeout_sec=12.0, default_return=pd.DataFrame())
+    def get_leads_for_enrichment(self, limit: int = 50, statuses: Optional[List[str]] = None) -> pd.DataFrame:
+        """
+        Return leads eligible for owner/contact enrichment.
+        Missing or empty enrichment_status is treated as 'pending'.
+        """
+        try:
+            wanted = [s.lower() for s in (statuses or ['pending', 'failed'])]
+            sample_size = max(limit * 8, 500)
+            docs = self.leads_ref.limit(sample_size).stream(timeout=10.0)
+            df = self._docs_to_df(docs)
+            if df.empty:
+                return df
+
+            status_series = df.get('enrichment_status', pd.Series([None] * len(df), index=df.index))
+            normalized_status = status_series.fillna('pending').astype(str).str.strip().str.lower()
+            normalized_status = normalized_status.replace('', 'pending')
+
+            filtered = df[normalized_status.isin(wanted)].copy()
+            filtered['enrichment_status'] = normalized_status[normalized_status.isin(wanted)]
+
+            if 'filing_date' in filtered.columns:
+                filtered = filtered.sort_values(by='filing_date', ascending=False, kind='stable')
+
+            return filtered.head(limit)
+        except Exception as e:
+            logger.error(f"Error getting leads for enrichment: {e}")
             return pd.DataFrame()
 
     def clear_old_leads(self, days: int = 30) -> int:
