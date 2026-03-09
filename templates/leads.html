@@ -1,0 +1,691 @@
+{% extends 'base.html' %}
+
+{% block title %}All Leads - Lead Generation{% endblock %}
+{% block page_title %}All Leads{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Filters -->
+    <div class="glass-dark rounded-2xl p-6 border border-white/10 shadow-2xl overflow-hidden">
+        <form id="leads-filter-form" method="GET" action="{{ url_for('leads') }}"
+            class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label for="search" class="block text-sm font-medium text-gray-400 mb-1">Search</label>
+                <div class="relative">
+                    <input type="text" name="search" id="search" value="{{ request.args.get('search', '') }}"
+                        placeholder="Business name..."
+                        class="block w-full bg-[#161638] text-white rounded-xl border border-white/10 px-4 py-2.5 pl-10 text-sm focus:border-pink-500 focus:ring-pink-500 transition-all">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                </div>
+            </div>
+
+            <div class="w-48">
+                <label for="state" class="block text-sm font-medium text-gray-400 mb-1">State</label>
+                <select name="state" id="state" onchange="this.form.submit()"
+                    class="block w-full bg-[#161638] text-white rounded-xl border border-white/10 px-3 py-2.5 text-sm focus:border-pink-500 focus:ring-pink-500 transition-all">
+                    <option value="" class="bg-white text-gray-900">All States</option>
+                    <option value="AL" {% if request.args.get('state')=='AL' %}selected{% endif %}
+                        class="bg-white text-gray-900">Alabama</option>
+                    <option value="AK" {% if request.args.get('state')=='AK' %}selected{% endif %}
+                        class="bg-white text-gray-900">Alaska</option>
+                    <option value="AZ" {% if request.args.get('state')=='AZ' %}selected{% endif %}
+                        class="bg-white text-gray-900">Arizona</option>
+                    <option value="AR" {% if request.args.get('state')=='AR' %}selected{% endif %}
+                        class="bg-white text-gray-900">Arkansas</option>
+                    <option value="CA" {% if request.args.get('state')=='CA' %}selected{% endif %}
+                        class="bg-white text-gray-900">California</option>
+                    <option value="CO" {% if request.args.get('state')=='CO' %}selected{% endif %}
+                        class="bg-white text-gray-900">Colorado</option>
+                    <option value="CT" {% if request.args.get('state')=='CT' %}selected{% endif %}
+                        class="bg-white text-gray-900">Connecticut</option>
+                    <option value="DE" {% if request.args.get('state')=='DE' %}selected{% endif %}
+                        class="bg-white text-gray-900">Delaware</option>
+                    <option value="FL" {% if request.args.get('state')=='FL' %}selected{% endif %}
+                        class="bg-white text-gray-900">Florida</option>
+                    <option value="GA" {% if request.args.get('state')=='GA' %}selected{% endif %}
+                        class="bg-white text-gray-900">Georgia</option>
+                    <option value="HI" {% if request.args.get('state')=='HI' %}selected{% endif %}
+                        class="bg-white text-gray-900">Hawaii</option>
+                    <option value="ID" {% if request.args.get('state')=='ID' %}selected{% endif %}
+                        class="bg-white text-gray-900">Idaho</option>
+                    <option value="IL" {% if request.args.get('state')=='IL' %}selected{% endif %}
+                        class="bg-white text-gray-900">Illinois</option>
+                    <option value="IN" {% if request.args.get('state')=='IN' %}selected{% endif %}
+                        class="bg-white text-gray-900">Indiana</option>
+                    <option value="IA" {% if request.args.get('state')=='IA' %}selected{% endif %}
+                        class="bg-white text-gray-900">Iowa</option>
+                    <option value="KS" {% if request.args.get('state')=='KS' %}selected{% endif %}
+                        class="bg-white text-gray-900">Kansas</option>
+                    <option value="KY" {% if request.args.get('state')=='KY' %}selected{% endif %}
+                        class="bg-white text-gray-900">Kentucky</option>
+                    <option value="LA" {% if request.args.get('state')=='LA' %}selected{% endif %}
+                        class="bg-white text-gray-900">Louisiana</option>
+                    <option value="ME" {% if request.args.get('state')=='ME' %}selected{% endif %}
+                        class="bg-white text-gray-900">Maine</option>
+                    <option value="MD" {% if request.args.get('state')=='MD' %}selected{% endif %}
+                        class="bg-white text-gray-900">Maryland</option>
+                    <option value="MA" {% if request.args.get('state')=='MA' %}selected{% endif %}
+                        class="bg-white text-gray-900">Massachusetts</option>
+                    <option value="MI" {% if request.args.get('state')=='MI' %}selected{% endif %}
+                        class="bg-white text-gray-900">Michigan</option>
+                    <option value="MN" {% if request.args.get('state')=='MN' %}selected{% endif %}
+                        class="bg-white text-gray-900">Minnesota</option>
+                    <option value="MS" {% if request.args.get('state')=='MS' %}selected{% endif %}
+                        class="bg-white text-gray-900">Mississippi</option>
+                    <option value="MO" {% if request.args.get('state')=='MO' %}selected{% endif %}
+                        class="bg-white text-gray-900">Missouri</option>
+                    <option value="MT" {% if request.args.get('state')=='MT' %}selected{% endif %}
+                        class="bg-white text-gray-900">Montana</option>
+                    <option value="NE" {% if request.args.get('state')=='NE' %}selected{% endif %}
+                        class="bg-white text-gray-900">Nebraska</option>
+                    <option value="NV" {% if request.args.get('state')=='NV' %}selected{% endif %}
+                        class="bg-white text-gray-900">Nevada</option>
+                    <option value="NH" {% if request.args.get('state')=='NH' %}selected{% endif %}
+                        class="bg-white text-gray-900">New Hampshire</option>
+                    <option value="NJ" {% if request.args.get('state')=='NJ' %}selected{% endif %}
+                        class="bg-white text-gray-900">New Jersey</option>
+                    <option value="NM" {% if request.args.get('state')=='NM' %}selected{% endif %}
+                        class="bg-white text-gray-900">New Mexico</option>
+                    <option value="NY" {% if request.args.get('state')=='NY' %}selected{% endif %}
+                        class="bg-white text-gray-900">New York</option>
+                    <option value="NC" {% if request.args.get('state')=='NC' %}selected{% endif %}
+                        class="bg-white text-gray-900">North Carolina</option>
+                    <option value="ND" {% if request.args.get('state')=='ND' %}selected{% endif %}
+                        class="bg-white text-gray-900">North Dakota</option>
+                    <option value="OH" {% if request.args.get('state')=='OH' %}selected{% endif %}
+                        class="bg-white text-gray-900">Ohio</option>
+                    <option value="OK" {% if request.args.get('state')=='OK' %}selected{% endif %}
+                        class="bg-white text-gray-900">Oklahoma</option>
+                    <option value="OR" {% if request.args.get('state')=='OR' %}selected{% endif %}
+                        class="bg-white text-gray-900">Oregon</option>
+                    <option value="PA" {% if request.args.get('state')=='PA' %}selected{% endif %}
+                        class="bg-white text-gray-900">Pennsylvania</option>
+                    <option value="RI" {% if request.args.get('state')=='RI' %}selected{% endif %}
+                        class="bg-white text-gray-900">Rhode Island</option>
+                    <option value="SC" {% if request.args.get('state')=='SC' %}selected{% endif %}
+                        class="bg-white text-gray-900">South Carolina</option>
+                    <option value="SD" {% if request.args.get('state')=='SD' %}selected{% endif %}
+                        class="bg-white text-gray-900">South Dakota</option>
+                    <option value="TN" {% if request.args.get('state')=='TN' %}selected{% endif %}
+                        class="bg-white text-gray-900">Tennessee</option>
+                    <option value="TX" {% if request.args.get('state')=='TX' %}selected{% endif %}
+                        class="bg-white text-gray-900">Texas</option>
+                    <option value="UT" {% if request.args.get('state')=='UT' %}selected{% endif %}
+                        class="bg-white text-gray-900">Utah</option>
+                    <option value="VT" {% if request.args.get('state')=='VT' %}selected{% endif %}
+                        class="bg-white text-gray-900">Vermont</option>
+                    <option value="VA" {% if request.args.get('state')=='VA' %}selected{% endif %}
+                        class="bg-white text-gray-900">Virginia</option>
+                    <option value="WA" {% if request.args.get('state')=='WA' %}selected{% endif %}
+                        class="bg-white text-gray-900">Washington</option>
+                    <option value="WV" {% if request.args.get('state')=='WV' %}selected{% endif %}
+                        class="bg-white text-gray-900">West Virginia</option>
+                    <option value="WI" {% if request.args.get('state')=='WI' %}selected{% endif %}
+                        class="bg-white text-gray-900">Wisconsin</option>
+                    <option value="WY" {% if request.args.get('state')=='WY' %}selected{% endif %}
+                        class="bg-white text-gray-900">Wyoming</option>
+                    <option value="DC" {% if request.args.get('state')=='DC' %}selected{% endif %}
+                        class="bg-white text-gray-900">Washington D.C.</option>
+                    <option value="US" {% if request.args.get('state')=='US' %}selected{% endif %}
+                        class="bg-white text-gray-900">US (Federal)</option>
+                </select>
+            </div>
+
+            <div class="w-40">
+                <label for="status" class="block text-sm font-medium text-gray-400 mb-1">Status</label>
+                <select name="status" id="status" onchange="this.form.submit()"
+                    class="block w-full bg-[#161638] text-white rounded-xl border border-white/10 px-3 py-2.5 text-sm focus:border-pink-500 focus:ring-pink-500 transition-all">
+                    <option value="" class="bg-white text-gray-900">All Statuses</option>
+                    <option value="Active" {% if request.args.get('status')=='Active' %}selected{% endif %}
+                        class="bg-white text-gray-900">Active</option>
+                    <option value="Pending" {% if request.args.get('status')=='Pending' %}selected{% endif %}
+                        class="bg-white text-gray-900">Pending</option>
+                    <option value="New Filing" {% if request.args.get('status')=='New Filing' %}selected{% endif %}
+                        class="bg-white text-gray-900">New Filing</option>
+                </select>
+            </div>
+
+            <div class="flex gap-2">
+                <a href="{{ url_for('leads') }}"
+                    class="px-4 py-2.5 bg-white/5 text-gray-300 rounded-xl hover:bg-white/10 transition-all font-medium text-sm border border-white/5">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Table -->
+    <div class="glass-dark rounded-2xl border border-white/10 shadow-2xl overflow-hidden mt-8">
+        <div
+            class="p-6 border-b border-white/10 bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h3 class="text-xl font-bold text-white">Business Leads</h3>
+                <p class="text-sm text-gray-400 mt-1">{{ total_leads }} total records found</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ url_for('export_csv') }}"
+                    class="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 transition-all font-semibold text-xs flex items-center gap-2">
+                    <i class="fas fa-file-csv"></i> CSV
+                </a>
+                <a href="{{ url_for('export_sheets_direct') }}" target="_blank"
+                    class="px-4 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/20 transition-all font-semibold text-xs flex items-center gap-2">
+                    <i class="fas fa-table"></i> Google Sheets
+                </a>
+                <button id="btnExportGHL"
+                    class="px-4 py-2 bg-pink-500/10 text-pink-400 border border-pink-500/20 rounded-xl hover:bg-pink-500/20 transition-all font-semibold text-xs flex items-center gap-2">
+                    <i class="fas fa-rocket"></i> Export to GHL
+                </button>
+                <button id="btnIdentifyDuplicates"
+                    class="px-4 py-2 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-xl hover:bg-amber-500/20 transition-all font-semibold text-xs flex items-center gap-2">
+                    <i class="fas fa-copy"></i> Identify Duplicates
+                </button>
+                <button id="btnDeleteDuplicates"
+                    class="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-all font-semibold text-xs flex items-center gap-2">
+                    <i class="fas fa-trash-alt"></i> Delete Duplicates
+                </button>
+            </div>
+        </div>
+
+        <div id="leadsXScroll" class="sticky top-0 z-40 h-4 overflow-x-auto overflow-y-hidden bg-[#0d0d2b] border-b border-white/10">
+            <div id="leadsXScrollInner" style="height: 1px;"></div>
+        </div>
+
+        <div id="ghlProgress"
+            class="hidden p-4 bg-pink-500/10 border-b border-white/10 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="animate-spin rounded-full h-4 w-4 border-2 border-pink-500 border-t-transparent"></div>
+                <span class="text-sm text-pink-300 font-medium">Exporting all leads to GoHighLevel... This may take a
+                    few minutes.</span>
+            </div>
+        </div>
+
+        <!-- Scrollable Table Container with Sticky Header -->
+        <div class="leads-scroll-wrapper"
+            style="max-height: 68vh; overflow-y: auto; overflow-x: auto; position: relative;">
+            <table id="leadsTable" class="w-full lead-table-premium"
+                style="width:100%; min-width: 1800px; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Business Name</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            State</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Phone</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Address</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Filing Date</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            URL</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            TIN / EIN</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            SIC</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            CIK</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            SEC File</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Category</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Owner</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            First Name</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Last Name</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Phone 1</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Phone 2</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Email 1</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Email 2</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Email 3</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Email 4</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Email 5</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            DOB</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Age</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-left"
+                            >
+                            Website</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right"
+                            >
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lead in leads %}
+                    <tr class="lead-row hover:bg-white/5 transition-colors" data-id="{{ lead.id }}">
+                        <td class="px-4 py-3 border-b border-white/5">
+                            <span class="font-bold text-white" title="{{ lead.business_name }}">{{
+                                lead.business_name | truncate(45) }}</span>
+                        </td>
+                        <td class="px-4 py-3 border-b border-white/5">
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                {{ lead.state }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 border-b border-white/5 font-bold text-pink-400">{{ lead.business_phone or
+                            lead.phone
+                            or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300 font-medium truncate max-w-[250px]"
+                            title="{{ lead.address or lead.business_address or '' }}">{{ (lead.address or
+                            lead.business_address or '-') }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300 font-bold">{{ lead.filing_date or '-'
+                            }}</td>
+                        <td class="px-4 py-3 border-b border-white/5">
+                            {% if lead.url %}
+                            <a href="{{ lead.url }}" target="_blank" class="text-blue-400 hover:underline">View</a>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.tin or lead.ein or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.sic_code or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.cik or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.sec_file_number or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5">
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                {{ lead.industry_category or '-' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 border-b border-white/5 text-white font-semibold">{{ lead.owner_name or '-'
+                            }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.first_name or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.last_name or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-blue-400 font-bold">{{ lead.phone_1 or '-' }}
+                        </td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.phone_2 or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5">
+                            {% set email_val = (lead.email_1 or lead.email) %}
+                            {% if email_val and email_val != 'nan' %}
+                            <a href="mailto:{{ email_val }}"
+                                class="text-pink-400 hover:text-pink-300 font-bold underline decoration-pink-500/30"
+                                title="{{ email_val }}">
+                                {{ email_val | string | truncate(30) }}
+                            </a>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="px-4 py-3 border-b border-white/5 text-[11px] text-gray-400">{{ lead.email_2 or '-'
+                            }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-[11px] text-gray-400">{{ lead.email_3 or '-'
+                            }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-[11px] text-gray-400">{{ lead.email_4 or '-'
+                            }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-[11px] text-gray-400">{{ lead.email_5 or '-'
+                            }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.dob or lead.date_of_birth or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5 text-gray-300">{{ lead.age or '-' }}</td>
+                        <td class="px-4 py-3 border-b border-white/5">
+                            {% if lead.website %}
+                            <a href="{{ lead.website }}" target="_blank"
+                                class="text-blue-400 hover:text-blue-300 font-bold" title="{{ lead.website }}">
+                                <i class="fas fa-external-link-alt mr-1"></i>Link
+                            </a>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="px-4 py-3 border-b border-white/5">
+                            <div class="flex gap-2 text-right">
+                                <a href="{{ lead.url }}" target="_blank"
+                                    class="p-2 text-pink-400 hover:bg-white/5 rounded-lg transition-all border border-white/10"
+                                    title="View Original Filing">
+                                    <i class="fas fa-file-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row">
+                        <td colspan="25" class="text-center py-20 bg-white/5">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-search text-5xl text-gray-700 mb-6"></i>
+                                <h4 class="text-2xl font-bold text-white mb-2">No leads match your criteria</h4>
+                                <p class="text-gray-400 mb-8 max-w-md mx-auto">Try clearing your filters or fetching
+                                    fresh data for this specific state.</p>
+                                <a href="{{ url_for('fetch_leads') }}"
+                                    class="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-pink-600 to-purple-700 text-white rounded-2xl hover:from-pink-500 hover:to-purple-600 font-bold transition-all shadow-lg shadow-pink-500/20 active:scale-95">
+                                    <i class="fas fa-bolt mr-2 text-yellow-400"></i>Fetch New Leads
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="p-6 border-t border-white/10 flex items-center justify-between bg-white/5 rounded-b-2xl">
+            <div class="text-base font-bold text-gray-400">
+                Viewing page <span
+                    class="text-pink-400 px-3 py-1.5 bg-pink-500/10 rounded-xl border border-pink-500/20">{{ page
+                    }}</span>
+            </div>
+            <div class="flex gap-4">
+                {% if has_prev %}
+                <a href="{{ url_for('leads', page=page-1, state=request.args.get('state'), status=request.args.get('status'), search=request.args.get('search')) }}"
+                    class="btn-pagination">
+                    <i class="fas fa-arrow-left mr-2"></i>Previous
+                </a>
+                {% else %}
+                <span class="btn-pagination-disabled">
+                    <i class="fas fa-arrow-left mr-2"></i>Previous
+                </span>
+                {% endif %}
+
+                {% if has_next %}
+                <a href="{{ url_for('leads', page=page+1, state=request.args.get('state'), status=request.args.get('status'), search=request.args.get('search')) }}"
+                    class="btn-pagination">
+                    Next<i class="fas fa-arrow-right ml-2"></i>
+                </a>
+                {% else %}
+                <span class="btn-pagination-disabled">
+                    Next<i class="fas fa-arrow-right ml-2"></i>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for processing -->
+<div id="processingModal"
+    class="fixed inset-0 bg-[#050510]/80 backdrop-blur-md z-[100] hidden flex items-center justify-center">
+    <div class="bg-[#111122] rounded-3xl p-10 shadow-2xl max-w-sm w-full text-center border border-white/10">
+        <div class="mb-6 relative">
+            <div class="w-20 h-20 border-4 border-pink-500/20 border-t-pink-500 rounded-full animate-spin mx-auto">
+            </div>
+            <i
+                class="fas fa-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-pink-500 text-xl"></i>
+        </div>
+        <h3 class="text-2xl font-black text-white mb-3" id="modalTitle">Analyzing Data</h3>
+        <p class="text-gray-400 font-medium" id="modalText">We are searching for records with low data density...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+    /* Premium Table Styling */
+    .lead-table-premium {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    /* TRULY Frozen Header via container scroll */
+    .leads-scroll-wrapper {
+        max-height: 68vh !important;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        position: relative;
+        scrollbar-width: auto;
+        scrollbar-color: #ec4899 rgba(15, 15, 35, 0.5);
+    }
+
+    .leads-scroll-wrapper::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+        display: block !important;
+    }
+
+    .leads-scroll-wrapper::-webkit-scrollbar-track {
+        background: rgba(15, 15, 35, 0.5);
+    }
+
+    .leads-scroll-wrapper::-webkit-scrollbar-thumb {
+        background: linear-gradient(to bottom, #ec4899, #8b5cf6) !important;
+        border-radius: 10px;
+    }
+
+    .leads-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(to bottom, #f472b6, #a78bfa) !important;
+    }
+
+    /* Removed old .overflow-both and .scroll-container-premium - using new class above */
+
+    /* Row Text Styling */
+    .lead-row td {
+        font-size: 14px !important;
+        color: #e5e7eb !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .lead-table-premium thead th {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: #0d0d2b;
+        border-bottom: 2px solid rgba(236, 72, 153, 0.8);
+    }
+
+    /* Duplicate Highlighting - PREMIUM */
+    .row-duplicate {
+        background-color: rgba(249, 115, 22, 0.1) !important;
+        border-left: 4px solid #f97316 !important;
+    }
+
+    .row-duplicate td {
+        color: #fdba74 !important;
+        border-color: rgba(249, 115, 22, 0.1) !important;
+    }
+
+    .btn-pagination {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        color: #e5e7eb;
+        border-radius: 1rem;
+        font-weight: 800;
+        font-size: 0.875rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-pagination:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #ec4899;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.2);
+    }
+
+    .btn-pagination-disabled {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 2px solid rgba(255, 255, 255, 0.05);
+        color: #4b5563;
+        border-radius: 1rem;
+        font-weight: 800;
+        font-size: 0.875rem;
+        cursor: not-allowed;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        // 1. Identify Duplicates
+        $('#btnIdentifyDuplicates').click(function () {
+            const modal = $('#processingModal');
+            $('#modalTitle').text('Identifying Duplicates');
+            $('#modalText').text('Scanning for records with less contact information...');
+            modal.removeClass('hidden');
+
+            $.get('/api/leads/duplicates', function (data) {
+                modal.addClass('hidden');
+
+                if (data.success) {
+                    const dupIds = Array.isArray(data.duplicate_ids)
+                        ? data.duplicate_ids
+                        : (Array.isArray(data.duplicates) ? data.duplicates.map(d => d.id).filter(Boolean) : []);
+                    let foundOnPage = 0;
+
+                    $('.lead-row').removeClass('row-duplicate');
+
+                    dupIds.forEach(id => {
+                        const row = $(`.lead-row[data-id="${id}"]`);
+                        if (row.length) {
+                            row.addClass('row-duplicate');
+                            foundOnPage++;
+                        }
+                    });
+
+                    if (dupIds.length > 0) {
+                        alert(`Found ${dupIds.length} total duplicates. ${foundOnPage} found on this page have been highlighted in ORANGE.\n\nNote: We kept the record with the MOST data and marked the others for deletion.`);
+                    } else {
+                        alert('Your data is clean! No duplicates found.');
+                    }
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            }).fail(function (xhr) {
+                modal.addClass('hidden');
+                const resp = xhr.responseJSON;
+                alert('Error identifying duplicates: ' + (resp && (resp.error || resp.message) ? (resp.error || resp.message) : 'Request failed'));
+            });
+        });
+
+        // 2. Delete Duplicates
+        $('#btnDeleteDuplicates').click(function () {
+            if (!confirm('Permanently delete all low-density duplicates? This will keep only the record with the most information for each business.')) {
+                return;
+            }
+
+            const modal = $('#processingModal');
+            $('#modalTitle').text('Cleaning Database');
+            $('#modalText').text('Removing redundant records and freeing up space...');
+            modal.removeClass('hidden');
+
+            $.post('/api/leads/duplicates/delete', function (data) {
+                modal.addClass('hidden');
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+        });
+
+        // 3. Export to GHL
+        $('#btnExportGHL').click(function () {
+            if (!confirm('Export ALL leads to GoHighLevel using the configured API key?')) {
+                return;
+            }
+
+            const btn = $(this);
+            const progress = $('#ghlProgress');
+            const progressSpan = progress.find('span');
+
+            btn.prop('disabled', true).addClass('opacity-50');
+            progress.removeClass('hidden');
+
+            $.post('/api/export/ghl', function (data) {
+                if (data.success && data.task_id) {
+                    const taskId = data.task_id;
+
+                    // Start polling
+                    const pollInterval = setInterval(() => {
+                        $.get(`/api/export/ghl/status/${taskId}`, function (statusData) {
+                            if (statusData.success) {
+                                const t = statusData.task;
+                                progressSpan.text(`Exporting to GHL: ${t.processed}/${t.total} (${t.success} success, ${t.failed} failed)...`);
+
+                                if (t.status === 'completed' || t.status === 'failed') {
+                                    clearInterval(pollInterval);
+                                    btn.prop('disabled', false).removeClass('opacity-50');
+                                    progress.addClass('hidden');
+
+                                    if (t.status === 'completed') {
+                                        alert(`Export Complete!\nTotal: ${t.total}\nSuccess: ${t.success}\nFailed: ${t.failed}`);
+                                    } else {
+                                        alert(`Export Failed: ${t.error || 'Unknown error'}`);
+                                    }
+                                }
+                            }
+                        });
+                    }, 2000);
+                } else {
+                    btn.prop('disabled', false).removeClass('opacity-50');
+                    progress.addClass('hidden');
+                    alert('Error: ' + (data.message || 'Unknown error'));
+                    if (data.message && data.message.includes('API Key')) {
+                        window.location.href = '/settings';
+                    }
+                }
+            }).fail(function (xhr) {
+                btn.prop('disabled', false).removeClass('opacity-50');
+                progress.addClass('hidden');
+                const resp = xhr.responseJSON;
+                alert('Error: ' + (resp ? resp.message : 'Request failed'));
+                if (resp && resp.message && resp.message.includes('API Key')) {
+                    window.location.href = '/settings';
+                }
+            });
+        });
+
+        // Keep an always-available horizontal scrollbar synced with table content.
+        const wrapper = document.querySelector('.leads-scroll-wrapper');
+        const xScroll = document.getElementById('leadsXScroll');
+        const xInner = document.getElementById('leadsXScrollInner');
+
+        if (wrapper && xScroll && xInner) {
+            let lock = false;
+            const syncWidth = () => {
+                xInner.style.width = `${wrapper.scrollWidth}px`;
+                xScroll.style.display = wrapper.scrollWidth > wrapper.clientWidth ? 'block' : 'none';
+            };
+
+            xScroll.addEventListener('scroll', () => {
+                if (lock) return;
+                lock = true;
+                wrapper.scrollLeft = xScroll.scrollLeft;
+                lock = false;
+            });
+
+            wrapper.addEventListener('scroll', () => {
+                if (lock) return;
+                lock = true;
+                xScroll.scrollLeft = wrapper.scrollLeft;
+                lock = false;
+            });
+
+            window.addEventListener('resize', syncWidth);
+            syncWidth();
+        }
+    });
+</script>
+{% endblock %}

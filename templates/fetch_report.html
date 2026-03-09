@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Fetch Report - LeadGen Pro{% endblock %}
+{% block page_title %}Fetch Report{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="glass-dark rounded-2xl p-6 border border-white/10">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Latest Fetch Summary</h2>
+                <p class="text-sm text-gray-400 mt-1">Generated at {{ report.generated_at }}</p>
+            </div>
+            <a href="{{ url_for('fetch_leads') }}" class="px-4 py-2 gradient-pink-blue text-white rounded-lg text-sm font-semibold">
+                Run Another Fetch
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+            <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                <p class="text-xs text-gray-400">States Requested</p>
+                <p class="text-xl font-bold text-white">{{ report.states_requested }}</p>
+            </div>
+            <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                <p class="text-xs text-gray-400">Records Scraped</p>
+                <p class="text-xl font-bold text-white">{{ report.scraped_total }}</p>
+            </div>
+            <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                <p class="text-xs text-gray-400">New Records Saved</p>
+                <p class="text-xl font-bold text-emerald-300">{{ report.saved_total }}</p>
+            </div>
+            <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                <p class="text-xs text-gray-400">Duplicates Skipped</p>
+                <p class="text-xl font-bold text-amber-300">{{ report.duplicates_total }}</p>
+            </div>
+            <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                <p class="text-xs text-gray-400">Background Enrichment</p>
+                <p class="text-xl font-bold text-blue-300">{{ 'Running' if report.task_id else 'Not Started' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-dark rounded-2xl p-6 border border-white/10">
+            <h3 class="text-lg font-semibold text-white mb-4">Scraped By State</h3>
+            <div class="max-h-[420px] overflow-y-auto border border-white/10 rounded-xl">
+                <table class="w-full text-sm">
+                    <thead class="bg-white/5 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-gray-400 uppercase text-xs">State</th>
+                            <th class="px-4 py-3 text-right text-gray-400 uppercase text-xs">Scraped</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        {% for row in report.state_summary %}
+                        <tr>
+                            <td class="px-4 py-2 text-gray-200">{{ row.name }} ({{ row.code }})</td>
+                            <td class="px-4 py-2 text-right text-white font-semibold">{{ row.scraped }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass-dark rounded-2xl p-6 border border-white/10">
+            <h3 class="text-lg font-semibold text-white mb-4">Saved Data Coverage</h3>
+            <div class="space-y-4">
+                <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
+                    <span class="text-gray-300">Category saved</span>
+                    <span class="text-white font-bold">{{ report.saved_metrics.category }}</span>
+                </div>
+                <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
+                    <span class="text-gray-300">Owner name saved</span>
+                    <span class="text-white font-bold">{{ report.saved_metrics.owner_name }}</span>
+                </div>
+                <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
+                    <span class="text-gray-300">Phone saved</span>
+                    <span class="text-white font-bold">{{ report.saved_metrics.phone }}</span>
+                </div>
+                <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
+                    <span class="text-gray-300">Email saved</span>
+                    <span class="text-white font-bold">{{ report.saved_metrics.email }}</span>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-4">Counts reflect records saved so far; additional enrichment may continue in the background.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

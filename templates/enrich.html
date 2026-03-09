@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+
+{% block title %}Enrich Data - Lead Generation{% endblock %}
+{% block page_title %}Data Enrichment{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="enrichmentDashboard()">
+    <!-- Header Card -->
+    <div class="glass-dark rounded-3xl p-8 border border-white/10 shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 -tr-1/4 w-64 h-64 bg-purple-500/10 blur-[100px] rounded-full"></div>
+        <div class="absolute bottom-0 left-0 -bl-1/4 w-64 h-64 bg-pink-500/10 blur-[100px] rounded-full"></div>
+
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-6">
+                <div
+                    class="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg shadow-purple-500/20">
+                    <i class="fas fa-magic text-3xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-white tracking-tight">AI Data Enhancement</h2>
+                    <p class="text-gray-400 mt-1 font-medium">Power up your leads with automated discovery and contact
+                        extraction</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+                <button @click="startDomainSearch()" :disabled="loading"
+                    class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl hover:from-blue-500 hover:to-indigo-600 font-black transition-all shadow-xl shadow-blue-500/30 active:scale-95 flex items-center gap-3 text-lg">
+                    <i class="fas fa-robot text-blue-300"></i>
+                    Launch Auto-Discovery: Find All Missing Domains
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-dark rounded-2xl p-6 border border-white/10 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm font-bold uppercase tracking-wider">Total Database</p>
+                    <p class="text-4xl font-black text-white mt-1">{{ total_leads }}</p>
+                </div>
+                <div
+                    class="h-12 w-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                    <i class="fas fa-database text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-dark rounded-2xl p-6 border border-white/10 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm font-bold uppercase tracking-wider">Enriched Leads</p>
+                    <p class="text-4xl font-black text-green-400 mt-1">{{ enriched_count }}</p>
+                </div>
+                <div
+                    class="h-12 w-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-dark rounded-2xl p-6 border border-white/10 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm font-bold uppercase tracking-wider">Success Rate</p>
+                    <p class="text-4xl font-black text-purple-400 mt-1">
+                        {% if total_leads > 0 %}{{ (enriched_count / total_leads * 100) | round(1) }}%{% else %}0%{%
+                        endif %}
+                    </p>
+                </div>
+                <div
+                    class="h-12 w-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                    <i class="fas fa-chart-line text-purple-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Indicator (Hidden by default) -->
+    <div x-show="taskId" x-cloak x-transition
+        class="glass-dark rounded-2xl p-6 border border-pink-500/30 shadow-2xl shadow-pink-500/10">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <div class="relative h-12 w-12">
+                    <div class="absolute inset-0 border-4 border-pink-500/20 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"
+                        x-show="taskStatus === 'running'"></div>
+                    <i class="fas fa-check absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-green-500 text-xl"
+                        x-show="taskStatus === 'completed'"></i>
+                </div>
+                <div>
+                    <h4 class="text-xl font-bold text-white"
+                        x-text="taskStatus === 'running' ? 'AI Agent Exploring Domains...' : 'Task Finished'"></h4>
+                    <p class="text-sm text-gray-400" x-text="`Task ID: ${taskId}`"></p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-2xl font-black text-pink-400" x-text="`${progress}%`"></span>
+            </div>
+        </div>
+
+        <div class="w-full bg-white/5 rounded-full h-3 mb-6 overflow-hidden border border-white/5">
+            <div class="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 h-full transition-all duration-500 shadow-[0_0_15px_rgba(236,72,153,0.5)]"
+                :style="`width: ${progress}%`"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 text-center">
+            <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                <p class="text-xs font-bold text-gray-500 uppercase">Processed</p>
+                <p class="text-xl font-bold text-white" x-text="processed"></p>
+            </div>
+            <div class="p-3 rounded-xl bg-green-500/5 border border-green-500/10">
+                <p class="text-xs font-bold text-green-600 uppercase">Success</p>
+                <p class="text-xl font-bold text-green-400" x-text="enriched"></p>
+            </div>
+            <div class="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                <p class="text-xs font-bold text-blue-600 uppercase">Time</p>
+                <p class="text-xl font-bold text-blue-400" x-text="`${Math.round(elapsed)}s`"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Data Table Container -->
+    <div class="glass-dark rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+        <div class="p-6 border-b border-white/10 flex items-center justify-between">
+            <h3 class="text-xl font-bold text-white flex items-center gap-3">
+                <i class="fas fa-table text-purple-400"></i>
+                Database Status
+            </h3>
+            <div class="flex gap-2">
+                <input type="text" x-model="search" placeholder="Filter business..."
+                    class="bg-[#161638] text-white border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-pink-500 outline-none w-64">
+            </div>
+        </div>
+
+        <div class="overflow-x-auto scroll-container-premium" style="max-height: 500px;">
+            <table class="w-full text-left" id="enrichTable"
+                style="min-width: 1200px; border-collapse: separate; border-spacing: 0;">
+                <thead class="sticky top-0 z-[100] bg-[#0d0d2b]">
+                    <tr>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest bg-[#0d0d2b]">
+                            Business Name</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest bg-[#0d0d2b]">
+                            State</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest bg-[#0d0d2b]">
+                            Website / Domain</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest bg-[#0d0d2b]">
+                            Email</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest bg-[#0d0d2b]">
+                            Phone</th>
+                        <th
+                            class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-right bg-[#0d0d2b]">
+                            Action</th>
+                    </tr>
+                    <tr class="h-[2px]">
+                        <th colspan="100" class="p-0 border-none sticky top-[52px] z-[101]">
+                            <div class="animated-gradient-line min-w-[1200px]"></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for lead in all_leads %}
+                    <tr class="hover:bg-white/5 transition-colors"
+                        x-show="!search || '{{ lead.business_name | lower }}'.includes(search.toLowerCase())">
+                        <td class="px-6 py-4">
+                            <span class="text-white font-bold">{{ lead.business_name | truncate(50) }}</span>
+                            <br>
+                            <span class="text-[10px] text-gray-500 font-medium">ID: {{ lead.id }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black italic uppercase">
+                                {{ lead.state }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <template x-if="liveResults['{{ lead.id }}']">
+                                <div>
+                                    <template
+                                        x-if="liveResults['{{ lead.id }}'].website && liveResults['{{ lead.id }}'].website !== 'Not Found'">
+                                        <a :href="'https://' + liveResults['{{ lead.id }}'].website.replace('http://','').replace('https://','')"
+                                            target="_blank"
+                                            class="text-blue-400 hover:text-blue-300 flex items-center gap-2 animate-pulse">
+                                            <i class="fas fa-link text-xs opacity-50"></i>
+                                            <span class="truncate max-w-[150px]"
+                                                x-text="liveResults['{{ lead.id }}'].website"></span>
+                                        </a>
+                                    </template>
+                                    <template x-if="liveResults['{{ lead.id }}'].website === 'Not Found'">
+                                        <span class="text-red-400/50 italic text-xs">Not Found</span>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="!liveResults['{{ lead.id }}']">
+                                <div>
+                                    {% if lead.website and lead.website != 'Not Found' %}
+                                    <a href="https://{{ lead.website | replace('http://','') | replace('https://','') }}"
+                                        target="_blank"
+                                        class="text-blue-400 hover:text-blue-300 flex items-center gap-2">
+                                        <i class="fas fa-link text-xs opacity-50"></i>
+                                        <span class="truncate max-w-[150px]">{{ lead.website }}</span>
+                                    </a>
+                                    {% elif lead.website == 'Not Found' %}
+                                    <span class="text-red-400/50 italic text-xs">Not Found</span>
+                                    {% else %}
+                                    <span class="text-gray-600 italic text-xs">-</span>
+                                    {% endif %}
+                                </div>
+                            </template>
+                        </td>
+                        <td class="px-6 py-4">
+                            <template x-if="liveResults['{{ lead.id }}'] && liveResults['{{ lead.id }}'].email">
+                                <span class="text-pink-400 font-medium"
+                                    x-text="liveResults['{{ lead.id }}'].email"></span>
+                            </template>
+                            <template x-if="!liveResults['{{ lead.id }}']">
+                                <div>
+                                    {% if lead.email %}
+                                    <span class="text-pink-400 font-medium">{{ lead.email }}</span>
+                                    {% else %}
+                                    <span class="text-gray-600">-</span>
+                                    {% endif %}
+                                </div>
+                            </template>
+                        </td>
+                        <td class="px-6 py-4">
+                            <template x-if="liveResults['{{ lead.id }}'] && liveResults['{{ lead.id }}'].phone">
+                                <span class="text-gray-300" x-text="liveResults['{{ lead.id }}'].phone"></span>
+                            </template>
+                            <template x-if="!liveResults['{{ lead.id }}']">
+                                <span class="text-gray-300">{{ lead.phone or '-' }}</span>
+                            </template>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button @click="enrichSingle({{ lead.id }}, $event.target)"
+                                class="p-2 text-indigo-400 hover:bg-white/5 border border-white/5 rounded-lg transition-all"
+                                title="Quick Enrichment">
+                                <i class="fas fa-magic"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function enrichmentDashboard() {
+        return {
+            loading: false,
+            showEnrichModal: false,
+            batchSize: 25,
+            search: '',
+            taskId: null,
+            taskStatus: null,
+            progress: 0,
+            processed: 0,
+            enriched: 0,
+            total: 0,
+            elapsed: 0,
+            pollInterval: null,
+            liveResults: {},
+
+            async startDomainSearch() {
+                if (!confirm("This will use AI Discovery to find official websites for all leads in the database. Continue?")) return;
+
+                this.loading = true;
+                try {
+                    const response = await fetch('/enrich/domains', { method: 'POST' });
+                    const data = await response.json();
+
+                    if (data.success && data.task_id) {
+                        this.taskId = data.task_id;
+                        this.taskStatus = 'running';
+                        this.startPolling();
+                    } else {
+                        alert('Error: ' + data.error);
+                        this.loading = false;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    this.loading = false;
+                }
+            },
+
+
+
+            startPolling() {
+                if (this.pollInterval) clearInterval(this.pollInterval);
+                this.pollInterval = setInterval(() => this.checkStatus(), 2000);
+            },
+
+            async checkStatus() {
+                if (!this.taskId) return;
+                try {
+                    const response = await fetch(`/enrich/status/${this.taskId}`);
+                    const data = await response.json();
+
+                    if (data.success && data.task) {
+                        const t = data.task;
+                        this.progress = t.progress_percent;
+                        this.processed = t.processed;
+                        this.enriched = t.enriched;
+                        this.total = t.total;
+                        this.elapsed = t.elapsed_seconds;
+                        this.taskStatus = t.status;
+
+                        // Merge new results
+                        if (t.results) {
+                            this.liveResults = { ...this.liveResults, ...t.results };
+                        }
+
+                        if (t.status === 'completed' || t.status === 'failed') {
+                            clearInterval(this.pollInterval);
+                            this.loading = false;
+                            if (t.status === 'completed') {
+                                setTimeout(() => window.location.reload(), 2000);
+                            }
+                        }
+                    }
+                } catch (error) { console.error(error); }
+            },
+
+            async enrichSingle(leadId, button) {
+                const icon = button.querySelector('i');
+                icon.className = 'fas fa-spinner fa-spin';
+
+                try {
+                    const response = await fetch(`/enrich/single/${leadId}`, { method: 'POST' });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        icon.className = 'fas fa-check text-green-500';
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        icon.className = 'fas fa-times text-red-500';
+                        alert(data.error);
+                    }
+                } catch (error) {
+                    icon.className = 'fas fa-magic';
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .spinner {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+{% endblock %}
