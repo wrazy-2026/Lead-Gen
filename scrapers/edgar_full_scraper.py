@@ -57,6 +57,44 @@ class GlobalEdgarScraper(BaseScraper):
     def get_industry_category(self, sic_code):
         return self.sic_map.get(str(sic_code), "Unknown Industry")
 
+    def _extract_ein(self, text: str) -> str:
+        """Extract EIN/TIN from SEC page text across common formats."""
+        if not text:
+            return ''
+        patterns = [
+            r'IRS\s*No\.?\s*[:#-]?\s*(\d{2}-?\d{7})',
+            r'Employer\s*Identification\s*No\.?\s*[:#-]?\s*(\d{2}-?\d{7})',
+            r'\bEIN\b\s*[:#-]?\s*(\d{2}-?\d{7})',
+            r'\bTIN\b\s*[:#-]?\s*(\d{2}-?\d{7})'
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+        return ''
+
+    def _extract_sic(self, text: str):
+        """Extract SIC code and optional industry label from SEC page text."""
+        if not text:
+            return '', ''
+
+        patterns = [
+            r'\bSIC\b\s*[:#-]?\s*(\d{4})\s*[-\u2013]?\s*([^|\n\r\[]+)?',
+            r'\[(\d{4})\]\s*SIC',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if not match:
+                continue
+            sic_code = (match.group(1) or '').strip()
+            industry = ''
+            if len(match.groups()) > 1 and match.group(2):
+                industry = match.group(2).strip(' -:;,.')
+            return sic_code, industry
+
+        return '', ''
+
     def fetch_new_businesses(self, limit: int = 5) -> List[BusinessRecord]:
         """
         Main entry point for ScraperManager.
@@ -164,13 +202,27 @@ class GlobalEdgarScraper(BaseScraper):
             
             if ident_info:
                 text = ident_info.get_text(separator='|')
-                ein_match = re.search(r'IRS No\.:\s*(\d+)', text)
-                if ein_match:
-                    details['ein'] = ein_match.group(1)
-                sic_match = re.search(r'SIC:\s*(\d+)', text)
-                if sic_match:
-                    details['sic_code'] = sic_match.group(1)
-                    details['industry_category'] = self.get_industry_category(details['sic_code'])
+                ein_val = self._extract_ein(text)
+                if ein_val:
+                    details['ein'] = ein_val
+
+                sic_code, industry = self._extract_sic(text)
+                if sic_code:
+                    details['sic_code'] = sic_code
+                    details['industry_category'] = industry or self.get_industry_category(sic_code)
+
+            # Fallback extraction from full page text in case identInfo is incomplete.
+            full_text = soup.get_text(separator='|')
+            if not details.get('ein'):
+                ein_val = self._extract_ein(full_text)
+                if ein_val:
+                    details['ein'] = ein_val
+
+            if not details.get('sic_code'):
+                sic_code, industry = self._extract_sic(full_text)
+                if sic_code:
+                    details['sic_code'] = sic_code
+                    details['industry_category'] = industry or self.get_industry_category(sic_code)
 
             mailers = soup.find_all('div', class_='mailer')
             business_addr_div = None

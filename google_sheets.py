@@ -892,7 +892,14 @@ class GoogleSheetsAPIExporter:
             logger.error(f"Failed to fetch quota: {e}")
             return {"error": str(e)}
     
-    def create_new_spreadsheet(self, title: str = "Leads Export", spreadsheet_id: str = None, df: pd.DataFrame = None, append: bool = False) -> dict:
+    def create_new_spreadsheet(
+        self,
+        title: str = "Leads Export",
+        spreadsheet_id: str = None,
+        df: pd.DataFrame = None,
+        append: bool = False,
+        worksheet_name: str = "Leads"
+    ) -> dict:
         """Create a new spreadsheet or use existing one and prepare it."""
         if not self.is_authenticated():
             return {"success": False, "error": "Not authenticated. Please connect to Google first."}
@@ -1001,7 +1008,12 @@ class GoogleSheetsAPIExporter:
             }
             
             if df is not None and not df.empty:
-                export_result = self.export_dataframe(df, spreadsheet.id, append=append)
+                export_result = self.export_dataframe(
+                    df,
+                    spreadsheet.id,
+                    worksheet_name=worksheet_name,
+                    append=append
+                )
                 result["export"] = export_result
             
             return result

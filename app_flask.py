@@ -2094,6 +2094,7 @@ def export_sheets_direct():
     """Export leads directly to a new Google Sheet."""
     try:
         df = get_export_leads_df(limit=5000)
+        logger.info(f"[SheetsDirect] Prepared dataframe rows={len(df)} cols={len(df.columns) if not df.empty else 0}")
         
         if df.empty:
             flash('No leads to export', 'warning')
@@ -2109,6 +2110,10 @@ def export_sheets_direct():
             return redirect(url_for('settings'))
 
         if not exporter.is_authenticated():
+            if not oauth_exporter.is_configured():
+                flash('Google OAuth is not configured. Please set valid GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Cloud Run.', 'error')
+                return redirect(url_for('settings'))
+
             # Start OAuth flow and retry export after callback.
             session['pending_export'] = {
                 'spreadsheet_id': load_google_settings().get('spreadsheet_id', ''),
@@ -2121,10 +2126,22 @@ def export_sheets_direct():
         # Load settings to see if we have a target spreadsheet
         google_settings = load_google_settings()
         spreadsheet_id = google_settings.get('spreadsheet_id')
-        
-        # Create or open spreadsheet with data
-        title = f"Business Leads Export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-        result = exporter.create_new_spreadsheet(title=title, spreadsheet_id=spreadsheet_id, df=df, append=True if spreadsheet_id else False)
+
+        # If spreadsheet is configured, write directly to a deterministic worksheet/tab.
+        if spreadsheet_id:
+            result = exporter.export_dataframe(df, spreadsheet_id, worksheet_name='Leads', append=True)
+            result['spreadsheet_url'] = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
+        else:
+            title = f"Business Leads Export - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            result = exporter.create_new_spreadsheet(
+                title=title,
+                spreadsheet_id=None,
+                df=df,
+                append=False,
+                worksheet_name='Leads'
+            )
+
+        logger.info(f"[SheetsDirect] Export result success={result.get('success')} rows={result.get('rows_exported')} error={result.get('error')}")
         
         if result.get('success'):
             # Update export history
@@ -2156,7 +2173,7 @@ def export_sheets():
     """Export leads to Google Sheets."""
     try:
         spreadsheet_id = request.form.get('spreadsheet_id')
-        worksheet_name = request.form.get('worksheet_name', 'Leads')
+        worksheet_name = (request.form.get('worksheet_name', 'Leads') or 'Leads').strip()
         
         if not spreadsheet_id:
             flash('Please enter a Spreadsheet ID', 'error')
@@ -2184,12 +2201,14 @@ def export_sheets():
             return redirect(auth_url)
         
         df = get_export_leads_df(limit=5000)
+        logger.info(f"[SheetsForm] Prepared dataframe rows={len(df)} cols={len(df.columns) if not df.empty else 0} target_sheet={spreadsheet_id} worksheet={worksheet_name}")
 
         if df.empty:
             flash('No leads available to export right now. Please refresh leads and try again.', 'warning')
             return redirect(url_for('export_page'))
         
         result = api_exporter.export_dataframe(df, spreadsheet_id, worksheet_name)
+        logger.info(f"[SheetsForm] Export result success={result.get('success')} rows={result.get('rows_exported')} error={result.get('error')}")
         
         if result.get('success'):
             # Update export history
