@@ -16,6 +16,12 @@
             </a>
         </div>
 
+        {% if report.fetch_error %}
+        <div class="mt-4 p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-200 text-sm">
+            <strong>Fetch Error:</strong> {{ report.fetch_error }}
+        </div>
+        {% endif %}
+
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
             <div class="p-4 bg-white/5 rounded-xl border border-white/10">
                 <p class="text-xs text-gray-400">States Requested</p>

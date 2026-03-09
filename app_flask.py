@@ -668,20 +668,7 @@ def get_state_stats(force_refresh=False):
     try:
         if force_refresh:
             _stats_cache['timestamp'] = None # Clear timestamp to force fetch
-            
-        # Optimization: Use the stats already calculated by DB
-        stats_data = db.get_stats()
-        if stats_data.get('leads_by_state'):
-            processed_stats = []
-            for s in stats_data['leads_by_state']:
-                # Ensure we have the full name
-                s['name'] = US_STATES.get(s['code'], s['code'])
-                processed_stats.append(s)
-            
-            _stats_cache['data'] = processed_stats
-            _stats_cache['timestamp'] = now
-            return _stats_cache['data']
-            
+
         # Fallback path: derive state counts from available records.
         state_counts = {code: 0 for code in US_STATES.keys()}
 
@@ -1147,19 +1134,8 @@ def states_report():
     """Detailed report showing lead distribution across all states."""
     force_refresh = request.args.get('refresh') == 'true'
     try:
-        total_leads = get_cached_total()
-        if not total_leads:
-            records = get_cached_leads(refresh_if_empty=True)
-            if not records:
-                records = _load_leads_direct_from_firestore(limit=5000)
-            if not records:
-                records = _load_leads_from_backup_json(limit=5000)
-            total_leads = len(records)
-
-        # Force refresh stats if we have leads from any source.
-        if total_leads and total_leads > 0:
-            force_refresh = True
         stats = get_state_stats(force_refresh=force_refresh)
+        total_leads = sum(int((s or {}).get('count', 0)) for s in (stats or []))
         return render_template('states_report.html',
                               stats=stats,
                               total_leads=total_leads)
@@ -1392,6 +1368,18 @@ def cron_daily_scrape():
 @login_required_custom
 def do_fetch():
     """Execute the lead fetching. Enrichment runs in background."""
+    states = []
+    all_records = []
+    state_results = {}
+    scraper_results = []
+    task_id = None
+    saved = 0
+    duplicates = 0
+    dedupe_skipped = 0
+    scraped_total = 0
+    new_lead_ids = []
+    fetch_error = None
+
     try:
         states = request.form.getlist('states')
         limit = int(request.form.get('limit', 20))
@@ -1401,11 +1389,6 @@ def do_fetch():
         
         if not states:
             states = ['FL']  # Default to Florida
-        
-        all_records = []
-        state_results = {}  # Track state-by-state results
-        scraper_results = []
-        task_id = None
         
         # Initialize state results for all requested states
         for s in states:
@@ -1605,6 +1588,7 @@ def do_fetch():
             return f"{name_clean}_{state}"
 
         # Remove duplicates by robust key
+        scraped_total = sum(int((payload or {}).get('count', 0)) for payload in state_results.values())
         unique_records = {}
         # Sort by date DESC so we keep the newest filing if we merge
         all_records.sort(key=lambda x: x.filing_date, reverse=True)
@@ -1620,8 +1604,7 @@ def do_fetch():
                     unique_records[key] = record
         
         all_records = list(unique_records.values())
-        total_input = sum(r['count'] for r in state_results.values() if isinstance(r, dict) and 'count' in r)
-        duplicates_removed = len(all_records) != total_input
+        dedupe_skipped = max(0, scraped_total - len(all_records))
         
         # Save initial records to database
         saved, duplicates, new_lead_ids = db.save_records(all_records)
@@ -1854,7 +1837,8 @@ def do_fetch():
             flash(f'No records found from {len(states)} states. Check your selections and try again.', 'warning')
             
     except Exception as e:
-        flash(f'Error fetching leads: {str(e)}', 'error')
+        fetch_error = str(e)
+        flash(f'Error fetching leads: {fetch_error}', 'error')
     finally:
         # Clear stats cache after any fetch attempt to ensure next load is fresh
         global _stats_cache
@@ -1887,10 +1871,11 @@ def do_fetch():
         session['last_fetch_report'] = {
             'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'states_requested': len(states) if 'states' in locals() else 0,
-            'scraped_total': len(all_records) if 'all_records' in locals() else 0,
-            'saved_total': int(saved) if 'saved' in locals() else 0,
-            'duplicates_total': int(duplicates) if 'duplicates' in locals() else 0,
+            'scraped_total': int(scraped_total),
+            'saved_total': int(saved),
+            'duplicates_total': int(dedupe_skipped + duplicates),
             'task_id': task_id,
+            'fetch_error': fetch_error,
             'state_summary': state_summary,
             'saved_metrics': {
                 'category': saved_category,
