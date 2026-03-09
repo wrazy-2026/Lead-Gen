@@ -1913,7 +1913,8 @@ def search_page():
 def export_page():
     """Export configuration page."""
     # Use API exporter which supports OAuth tokens
-    exporter = GoogleSheetsAPIExporter()
+    token_dict = get_best_google_token()
+    exporter = GoogleSheetsAPIExporter(token_dict=token_dict)
     sheets_configured = exporter.is_configured()
     sheets_authenticated = exporter.is_authenticated()
     
@@ -2071,10 +2072,6 @@ def export_sheets_direct():
             flash('Google Sheets not configured. Go to Settings to connect your Google account.', 'warning')
             return redirect(url_for('settings'))
         
-        if not exporter.is_authenticated():
-            flash('Please connect to Google Sheets first. Go to Settings to authorize.', 'warning')
-            return redirect(url_for('settings'))
-        
         # Load settings to see if we have a target spreadsheet
         google_settings = load_google_settings()
         spreadsheet_id = google_settings.get('spreadsheet_id')
@@ -2179,11 +2176,23 @@ def oauth2callback():
         success = exporter.handle_oauth_callback(authorization_response, redirect_uri)
         
         if success:
+            # Persist token beyond single instance so Cloud Run exports stay authenticated.
+            try:
+                if os.path.exists('token.json'):
+                    with open('token.json', 'r', encoding='utf-8') as f:
+                        token_payload = json.load(f)
+                    session['google_token'] = token_payload
+                    # Save for subsequent requests/instances.
+                    db.save_setting('google_admin_token', token_payload)
+            except Exception as token_e:
+                print(f"[OAuth] Token persistence warning: {token_e}")
+
             flash('Successfully connected to Google Sheets!', 'success')
             pending = session.pop('pending_export', None)
             if pending:
                 # Use API exporter for the actual export
-                api_exporter = GoogleSheetsAPIExporter()
+                token_dict = get_best_google_token()
+                api_exporter = GoogleSheetsAPIExporter(token_dict=token_dict)
                 df = db.get_all_leads()
                 result = api_exporter.export_dataframe(
                     df, 
