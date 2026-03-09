@@ -1415,34 +1415,32 @@ def do_fetch():
         # STEP 1: HYBRID SCRAPING (SEC + FALLBACK)
         # ====================================================================
         
-        # 1A: Fetch global SEC data once (much faster than per-state)
-        sec_records = []
+        # 1A: SEC scraping per selected state (prevents early-state bias)
         if use_sec:
-            try:
-                # Use base SECEdgarScraper to get recent global filings (limit * 20 for much broader coverage)
-                global_sec = SECEdgarScraper()
-                sec_records = global_sec.fetch_new_businesses(limit=limit * 20, fast_mode=False)
-                scraper_results.append(f"SEC Global: Found {len(sec_records)} recent filings (Scanned 20x for better coverage)")
-            except Exception as e:
-                scraper_results.append(f"SEC Global: Error - {str(e)}")
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            from scrapers.edgar_full_scraper import GlobalEdgarScraper
 
-        # 1B: Distribute SEC records to selected states
-        for state in states:
-            state_upper = state.upper()
-            state_matches = [
-                r for r in sec_records 
-                if (r.state_of_incorporation and r.state_of_incorporation.upper() == state_upper) or 
-                   (r.state and r.state.upper() == state_upper)
-            ]
-            
-            if state_matches:
-                state_results[state] = {'count': len(state_matches), 'records': state_matches[:limit]}
-                all_records.extend(state_matches[:limit])
-                scraper_results.append(f"{state}: Found {len(state_matches)} leads in Global SEC scan")
-            else:
-                scraper_results.append(f"{state}: No leads in Global SEC scan (trying individual search...)")
+            global_scraper = GlobalEdgarScraper()
 
-        # 1C: Target state-specific SEC search for missing states
+            def fetch_state_global_sec(state_code):
+                try:
+                    recs = global_scraper.fetch_for_state(state_code.upper(), limit=limit)
+                    return state_code, recs, None
+                except Exception as ex:
+                    return state_code, [], str(ex)
+
+            with ThreadPoolExecutor(max_workers=6) as executor:
+                future_to_state = {executor.submit(fetch_state_global_sec, s): s for s in states}
+                for future in as_completed(future_to_state):
+                    s_code, recs, err = future.result()
+                    if recs:
+                        state_results[s_code] = {'count': len(recs), 'records': recs}
+                        all_records.extend(recs)
+                        scraper_results.append(f"{s_code}: Found {len(recs)} leads via Full-USA SEC scrape")
+                    elif err:
+                        scraper_results.append(f"{s_code}: SEC scrape error ({err})")
+
+        # 1B: Targeted SEC fallback for still-missing states
         missing_states = [s for s in states if s not in state_results or state_results[s]['count'] == 0]
         
         if missing_states and use_sec:
@@ -1474,6 +1472,49 @@ def do_fetch():
                     else:
                         scraper_results.append(f"{s_code}: No leads found in Targeted SEC Search (trying fallback...)")
 
+        # 1C: Backup fallback from all_states_leads.json for any states still missing
+        missing_states = [s for s in states if s not in state_results or state_results[s]['count'] == 0]
+        if missing_states:
+            try:
+                from scrapers.base_scraper import BusinessRecord
+                backup_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'all_states_leads.json')
+                if os.path.exists(backup_path):
+                    with open(backup_path, 'r', encoding='utf-8') as f:
+                        backup_rows = json.load(f)
+                else:
+                    backup_rows = []
+
+                for s_code in missing_states:
+                    state_rows = [r for r in backup_rows if str(r.get('state', '')).upper() == s_code.upper()][:limit]
+                    if not state_rows:
+                        continue
+
+                    converted = []
+                    for row in state_rows:
+                        converted.append(BusinessRecord(
+                            business_name=row.get('business_name') or 'Unknown Business',
+                            filing_date=row.get('filing_date') or datetime.now().strftime('%Y-%m-%d'),
+                            state=s_code.upper(),
+                            status=row.get('status') or 'Active',
+                            url=row.get('url'),
+                            filing_number=row.get('filing_number'),
+                            address=row.get('business_address') or row.get('address'),
+                            phone=row.get('business_phone') or row.get('phone'),
+                            business_address=row.get('business_address') or row.get('address'),
+                            business_phone=row.get('business_phone') or row.get('phone'),
+                            ein=row.get('tin_number') or row.get('ein'),
+                            cik=row.get('cik'),
+                            sic_code=row.get('sic_code'),
+                            industry_category=row.get('industry_category')
+                        ))
+
+                    if converted:
+                        state_results[s_code] = {'count': len(converted), 'records': converted}
+                        all_records.extend(converted)
+                        scraper_results.append(f"{s_code}: Added {len(converted)} leads from all_states_leads.json backup")
+            except Exception as e:
+                scraper_results.append(f"Backup JSON fallback error: {str(e)}")
+
         gemini_svc = get_gemini_service()
 
         def _classify_category(name, state=None, address=None):
@@ -1491,7 +1532,7 @@ def do_fetch():
                     pass
             return detect_business_category(name or '')
 
-        # 1D: Fallback for states still missing (using OpenCorporates or others)
+        # 1D: Fallback for states still missing (state-specific scrapers)
         missing_states = [s for s in states if s not in state_results or state_results[s]['count'] == 0]
         
         if missing_states:
