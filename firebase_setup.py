@@ -14,6 +14,13 @@ def initialize_firebase():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     
     target_project_id = os.environ.get("FIREBASE_PROJECT_ID", "lively-paratext-487716-r8").strip() or "lively-paratext-487716-r8"
+    is_cloud_runtime = bool(os.environ.get("K_SERVICE") or os.environ.get("GOOGLE_CLOUD_PROJECT"))
+
+    # In Cloud Run/GCP, prefer ADC and never auto-pick bundled JSON keys.
+    # Bundled keys may target a different project and cause Firestore 403 errors.
+    if is_cloud_runtime:
+        logger.info("Initializing Firebase with ADC for project: %s", target_project_id)
+        return firebase_admin.initialize_app(options={'projectId': target_project_id})
     
     # Improved discovery
     cred_path = None
