@@ -2110,18 +2110,19 @@ def export_sheets_direct():
             return redirect(url_for('settings'))
 
         if not exporter.is_authenticated():
-            if not oauth_exporter.is_configured():
-                flash('Google OAuth is not configured. Please set valid GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Cloud Run.', 'error')
-                return redirect(url_for('settings'))
-
             # Start OAuth flow and retry export after callback.
             session['pending_export'] = {
                 'spreadsheet_id': load_google_settings().get('spreadsheet_id', ''),
                 'worksheet_name': 'Leads'
             }
-            redirect_uri = request.host_url.rstrip('/') + url_for('oauth2callback')
-            auth_url = oauth_exporter.get_authorization_url(redirect_uri)
-            return redirect(auth_url)
+            try:
+                redirect_uri = request.host_url.rstrip('/') + url_for('oauth2callback')
+                auth_url = oauth_exporter.get_authorization_url(redirect_uri)
+                return redirect(auth_url)
+            except Exception as auth_e:
+                logger.error(f"[SheetsDirect] OAuth URL generation failed: {auth_e}")
+                flash('Google OAuth is not configured. Please set valid GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Cloud Run.', 'error')
+                return redirect(url_for('settings'))
         
         # Load settings to see if we have a target spreadsheet
         google_settings = load_google_settings()
@@ -2286,11 +2287,7 @@ def google_connect():
     """Start Google Sheets OAuth flow."""
     try:
         exporter = GoogleSheetsExporter()
-        if not exporter.is_configured():
-            flash('Google Sheets not configured. Please contact administrator.', 'warning')
-            return redirect(url_for('settings'))
-        
-        # Get the redirect URI
+        # Get the redirect URI and attempt OAuth URL generation directly.
         redirect_uri = request.host_url.rstrip('/') + url_for('oauth2callback')
         auth_url = exporter.get_authorization_url(redirect_uri)
         return redirect(auth_url)
