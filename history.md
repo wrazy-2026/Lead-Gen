@@ -2,6 +2,27 @@
 
 ## April 12, 2026 (Latest Update)
 
+### Standard HTML State Scrapers - 29 States Active
+
+Added scrapers for all Standard HTML states (no JavaScript required):
+
+**Active States (29):**
+FL, IL, NC, MA, TN, MO, WI, CO, SC, AL, LA, KY, OR, OK, UT, IA, AR, MS, KS, NM, NE, HI, NH, ME, RI, DE, SD, AK, VT
+
+**Still Disabled (21):**
+- CA, NY, GA, PA, TX, AZ (CAPTCHA/login/SSL issues)
+- OH, NJ, VA, WA, MI, IN (JS required but may work)
+- NV, WV, MD, CT, MN, ID, MT, ND, WY (CAPTCHA or complex JS)
+
+**Files Updated:**
+- `scrapers/multistate_scraper.py` - Added 23 new StateConfig entries
+- `app_flask.py` - Updated ACTIVE_SCRAPER_STATES with 29 states
+- `templates/florida_scraper.html` - Marked 29 states as active
+
+---
+
+## April 12, 2026
+
 ### Knowledge Base Page Added
 
 New `/knowledgebase` page with all 50 state Secretary of State business search websites:
