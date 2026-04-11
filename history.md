@@ -2,9 +2,27 @@
 
 ## April 12, 2026 (Latest Update)
 
+### Multi-State SOS Scraper Expansion - 18 States
+
+**18 States Now Active**
+
+Added 12 new state scrapers to the multistate_scraper.py:
+
+**Batch 1 (6 states):** FL, CA, TX, NY, PA, GA
+**Batch 2 (12 states):** OH, NC, IL, NJ, VA, WA, AZ, MA, MI, TN, IN, CO
+
+**Files Updated:**
+- `scrapers/multistate_scraper.py` - Added StateConfig for 12 new states with CSS selectors
+- `app_flask.py` - Updated ACTIVE_SCRAPER_STATES to include all 18 states  
+- `templates/florida_scraper.html` - Marked new states as active (clickable)
+
+---
+
+## April 12, 2026
+
 ### Multi-State SOS Scraper - Full Implementation
 
-**6 States Now Active: FL, CA, TX, NY, PA, GA**
+**6 States Initial Release: FL, CA, TX, NY, PA, GA**
 
 Built multi-state Playwright scrapers for the top 5 US states by population plus Georgia:
 - **Florida (FL)** - Sunbiz.org - Fully working
