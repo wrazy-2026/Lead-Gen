@@ -401,6 +401,7 @@ STATE_CONFIGS: Dict[str, StateConfig] = {
         date_selector="td:nth-child(4)",
         detail_link_selector="td:nth-child(1) a",
         wait_after_search=3000,
+        requires_captcha=True,  # reCAPTCHA image challenge
     ),
     "VT": StateConfig(
         code="VT",

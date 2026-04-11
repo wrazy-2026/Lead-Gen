@@ -2,6 +2,22 @@
 
 ## April 12, 2026 (Latest Update)
 
+### Illinois & Utah Disabled - reCAPTCHA Required
+
+Removed IL and UT from active scrapers due to reCAPTCHA image challenges:
+- **Illinois**: reCAPTCHA Enterprise on business entity search
+- **Utah**: reCAPTCHA image challenge on entity search
+
+**Active States: 27** (was 29)
+
+**Files Updated:**
+- `app_flask.py` - Removed IL, UT from ACTIVE_SCRAPER_STATES
+- `scrapers/multistate_scraper.py` - Marked UT with requires_captcha=True
+
+---
+
+## April 12, 2026
+
 ### Illinois Scraper Fixed
 
 Fixed Illinois Secretary of State Business Entity Search scraper:
