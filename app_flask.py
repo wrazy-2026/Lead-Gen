@@ -4774,7 +4774,7 @@ def server_error(e):
 
 
 # ============================================================================
-# FLORIDA SUNBIZ SCRAPER
+# MULTI-STATE SOS SCRAPER (Florida + more states)
 # ============================================================================
 import sys as _sys
 
@@ -4785,13 +4785,27 @@ if _florida_dir not in _sys.path:
 
 from sunbiz_scraper_fixed import FixedSunbizScraper
 
-# In-memory state for the Florida scraper (mirrors the standalone app pattern)
+# Import multi-state scraper
+try:
+    from scrapers.multistate_scraper import get_scraper_for_states, STATE_CONFIGS as MULTISTATE_CONFIGS
+    MULTISTATE_AVAILABLE = True
+except ImportError:
+    MULTISTATE_AVAILABLE = False
+    MULTISTATE_CONFIGS = {}
+
+# Supported states for scraping (FL always active, others depend on multistate scraper)
+ACTIVE_SCRAPER_STATES = {'FL'}
+if MULTISTATE_AVAILABLE:
+    ACTIVE_SCRAPER_STATES.update({'GA', 'NY', 'PA', 'CA', 'TX'})
+
+# In-memory state for the SOS scraper
 _florida_scrape_state = {
     "status": "idle",       # idle | running | done | error
     "businesses": [],
     "message": "",
     "progress": "",
     "logs": [],
+    "selected_states": ["FL"],  # Track which states are being scraped
 }
 
 
@@ -4887,11 +4901,13 @@ def _florida_load_from_db(limit: int = 500) -> list:
         return []
 
 
-def _florida_run_scrape(keywords: list, max_per_category: int):
+def _florida_run_scrape(keywords: list, max_per_category: int, states: list = None):
+    """Run scrape for one or more states."""
+    states = states or ["FL"]
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        loop.run_until_complete(_florida_async_scrape(keywords, max_per_category))
+        loop.run_until_complete(_florida_async_scrape(keywords, max_per_category, states))
     except Exception as exc:
         _florida_scrape_state["status"] = "error"
         _florida_scrape_state["message"] = f"Scrape failed: {exc}"
@@ -4900,36 +4916,77 @@ def _florida_run_scrape(keywords: list, max_per_category: int):
         loop.close()
 
 
-async def _florida_async_scrape(keywords: list, max_per_category: int):
-    scraper = FixedSunbizScraper(headless=True, on_log=_florida_add_log)
-    try:
-        await scraper.start_browser()
-        page = await scraper.context.new_page()
-        page.set_default_timeout(scraper.timeout)
+async def _florida_async_scrape(keywords: list, max_per_category: int, states: list = None):
+    """Async scraping for one or more states."""
+    states = states or ["FL"]
+    _florida_scrape_state["selected_states"] = states
+    
+    # If only Florida, use the specialized Sunbiz scraper
+    if states == ["FL"]:
+        scraper = FixedSunbizScraper(headless=True, on_log=_florida_add_log)
+        try:
+            await scraper.start_browser()
+            page = await scraper.context.new_page()
+            page.set_default_timeout(scraper.timeout)
 
-        all_businesses = []
-        total = len(keywords)
-        for i, keyword in enumerate(keywords, 1):
-            _florida_scrape_state["progress"] = f"Scraping keyword {i}/{total}: {keyword}"
-            results = await scraper.scrape_keyword(page, keyword, max_per_category)
-            all_businesses.extend(results)
-            await asyncio.sleep(2)
+            all_businesses = []
+            total = len(keywords)
+            for i, keyword in enumerate(keywords, 1):
+                _florida_scrape_state["progress"] = f"FL: Scraping keyword {i}/{total}: {keyword}"
+                results = await scraper.scrape_keyword(page, keyword, max_per_category)
+                all_businesses.extend(results)
+                await asyncio.sleep(2)
 
-        await page.close()
+            await page.close()
 
-        scraper.businesses = all_businesses
-        sorted_biz = scraper.sort_by_date(ascending=False)
-        _florida_scrape_state["businesses"] = sorted_biz
+            scraper.businesses = all_businesses
+            sorted_biz = scraper.sort_by_date(ascending=False)
+            _florida_scrape_state["businesses"] = sorted_biz
+            
+            # Save to database for persistence
+            _florida_scrape_state["progress"] = "Saving to database..."
+            saved_count = _florida_save_to_db(sorted_biz)
+            
+            _florida_scrape_state["status"] = "done"
+            _florida_scrape_state["message"] = f"Done! Found {len(sorted_biz)} businesses across {total} keywords. Saved {saved_count} to database."
+            _florida_add_log(_florida_scrape_state["message"])
+        finally:
+            await scraper.stop_browser()
+    else:
+        # Multi-state scraping using MultiStateScraper
+        if not MULTISTATE_AVAILABLE:
+            _florida_scrape_state["status"] = "error"
+            _florida_scrape_state["message"] = "Multi-state scraper not available"
+            return
         
-        # Save to database for persistence
-        _florida_scrape_state["progress"] = "Saving to database..."
-        saved_count = _florida_save_to_db(sorted_biz)
-        
-        _florida_scrape_state["status"] = "done"
-        _florida_scrape_state["message"] = f"Done! Found {len(sorted_biz)} businesses across {total} keywords. Saved {saved_count} to database."
-        _florida_add_log(_florida_scrape_state["message"])
-    finally:
-        await scraper.stop_browser()
+        try:
+            scraper = get_scraper_for_states(states, headless=True, on_log=_florida_add_log)
+            
+            _florida_add_log(f"Starting multi-state scrape for: {', '.join(states)}")
+            _florida_scrape_state["progress"] = f"Scraping {len(states)} state(s)..."
+            
+            all_businesses = await scraper.scrape(keywords=keywords, max_per_keyword=max_per_category)
+            
+            # Add state to each business if not present
+            for biz in all_businesses:
+                if 'state' not in biz:
+                    biz['state'] = states[0] if len(states) == 1 else 'MULTI'
+            
+            _florida_scrape_state["businesses"] = all_businesses
+            
+            # Save to database
+            _florida_scrape_state["progress"] = "Saving to database..."
+            saved_count = _florida_save_to_db(all_businesses)
+            
+            _florida_scrape_state["status"] = "done"
+            state_names = ', '.join(states)
+            _florida_scrape_state["message"] = f"Done! Found {len(all_businesses)} businesses from {state_names}. Saved {saved_count} to database."
+            _florida_add_log(_florida_scrape_state["message"])
+            
+        except Exception as e:
+            _florida_scrape_state["status"] = "error"
+            _florida_scrape_state["message"] = f"Multi-state scrape failed: {str(e)}"
+            _florida_add_log(f"ERROR: {str(e)}")
 
 
 @app.route('/florida-scraper')
@@ -4947,6 +5004,15 @@ def florida_api_scrape():
     data = request.get_json(silent=True) or {}
     keywords = data.get("keywords", FixedSunbizScraper.HOME_SERVICE_KEYWORDS[:3])
     max_per_category = min(int(data.get("max_per_category", 20)), 500)
+    
+    # Get selected states (default to Florida)
+    states = data.get("states", ["FL"])
+    if isinstance(states, str):
+        states = [states]
+    # Filter to only active scraper states
+    states = [s.upper() for s in states if s.upper() in ACTIVE_SCRAPER_STATES]
+    if not states:
+        states = ["FL"]
 
     keywords = [str(k).strip() for k in keywords if str(k).strip()]
     if not keywords:
@@ -4955,13 +5021,21 @@ def florida_api_scrape():
     _florida_scrape_state["status"] = "running"
     _florida_scrape_state["businesses"] = []
     _florida_scrape_state["message"] = ""
-    _florida_scrape_state["progress"] = "Starting..."
+    _florida_scrape_state["progress"] = f"Starting scrape for {', '.join(states)}..."
     _florida_scrape_state["logs"] = []
+    _florida_scrape_state["selected_states"] = states
 
-    thread = threading.Thread(target=_florida_run_scrape, args=(keywords, max_per_category), daemon=True)
+    thread = threading.Thread(target=_florida_run_scrape, args=(keywords, max_per_category, states), daemon=True)
     thread.start()
 
-    return jsonify({"status": "started"})
+    return jsonify({"status": "started", "states": states})
+
+
+@app.route('/api/florida/active-states')
+@login_required_custom
+def florida_api_active_states():
+    """Return list of states with active scrapers."""
+    return jsonify({"states": list(ACTIVE_SCRAPER_STATES)})
 
 
 @app.route('/api/florida/status')

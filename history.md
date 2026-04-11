@@ -1,6 +1,43 @@
 # Changelog / History
 
-## April 12, 2026 (Latest)
+## April 12, 2026 (Latest Update)
+
+### Multi-State SOS Scraper - Full Implementation
+
+**6 States Now Active: FL, CA, TX, NY, PA, GA**
+
+Built multi-state Playwright scrapers for the top 5 US states by population plus Georgia:
+- **Florida (FL)** - Sunbiz.org - Fully working
+- **California (CA)** - bizfileonline.sos.ca.gov - Angular app, may have captcha
+- **Texas (TX)** - mycpa.cpa.state.tx.us - Comptroller public search
+- **New York (NY)** - apps.dos.ny.gov - DataTables-based
+- **Pennsylvania (PA)** - corporations.pa.gov - Standard form
+- **Georgia (GA)** - ecorp.sos.ga.gov - Kendo UI grid
+
+**New Files Created:**
+- `scrapers/multistate_scraper.py` - Comprehensive Playwright-based scraper with:
+  - `STATE_CONFIGS` dict with selectors for each state
+  - `MultiStateScraper` class for generic scraping
+  - Specialized classes: `FloridaSunbizScraper`, `GeorgiaScraper`, `NewYorkScraper`, `CaliforniaScraper`, `TexasScraper`
+  - `get_scraper_for_states()` factory function
+
+**Backend Updates:**
+- `app_flask.py`:
+  - Updated `_florida_run_scrape()` to accept states parameter
+  - Updated `_florida_async_scrape()` to use MultiStateScraper for non-FL states
+  - Added `ACTIVE_SCRAPER_STATES` set
+  - New endpoint: `/api/florida/active-states`
+
+**Frontend Updates:**
+- `templates/florida_scraper.html`:
+  - States are now clickable buttons (like keywords) with Select All/Clear
+  - Multi-select: can scrape multiple states at once
+  - Updated `startScrape()` to pass selected states array to API
+  - 6 states marked as active, 44 as "Coming Soon"
+
+---
+
+## April 12, 2026
 
 ### Multi-State SOS Scraper with Filters
 
