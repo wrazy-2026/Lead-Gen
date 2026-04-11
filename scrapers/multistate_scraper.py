@@ -472,8 +472,15 @@ class MultiStateScraper:
         
         try:
             # Navigate to search page
+            # Use domcontentloaded for JS-heavy sites (Firebase, Angular, etc.)
+            wait_strategy = "domcontentloaded" if config.extra.get("requires_js") else "networkidle"
             self._log(f"Navigating to {config.search_url}")
-            await page.goto(config.search_url, wait_until="networkidle")
+            try:
+                await page.goto(config.search_url, wait_until=wait_strategy, timeout=30000)
+            except Exception as nav_err:
+                # Fallback: try domcontentloaded if networkidle times out
+                self._log(f"  Navigation timeout, trying fallback...")
+                await page.goto(config.search_url, wait_until="domcontentloaded", timeout=30000)
             await asyncio.sleep(1)
             
             for keyword in keywords:
@@ -762,9 +769,17 @@ class GeorgiaScraper(MultiStateScraper):
         results = []
         
         try:
-            # Georgia's form has multiple fields
-            await page.goto(config.search_url, wait_until="networkidle")
-            await asyncio.sleep(2)
+            # Georgia uses Firebase App Check - use domcontentloaded instead of networkidle
+            await page.goto(config.search_url, wait_until="domcontentloaded", timeout=30000)
+            
+            # Wait for the search form to be ready (instead of networkidle)
+            try:
+                await page.wait_for_selector("#txtBusinessName", timeout=15000)
+            except Exception:
+                # If form not ready, wait a bit more
+                await asyncio.sleep(3)
+            
+            await asyncio.sleep(1)
             
             # Clear and fill business name
             name_input = await page.query_selector("#txtBusinessName")

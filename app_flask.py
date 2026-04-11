@@ -4793,14 +4793,16 @@ except ImportError:
     MULTISTATE_AVAILABLE = False
     MULTISTATE_CONFIGS = {}
 
-# Supported states for scraping (FL always active, others depend on multistate scraper)
+# Supported states for scraping (FL is the only fully working scraper)
+# Other states have issues: SSL errors, login required, Firebase protection, wrong selectors
 ACTIVE_SCRAPER_STATES = {'FL'}
-if MULTISTATE_AVAILABLE:
-    # 18 states total with scrapers
-    ACTIVE_SCRAPER_STATES.update({
-        'GA', 'NY', 'PA', 'CA', 'TX',  # Batch 1
-        'OH', 'NC', 'IL', 'NJ', 'VA', 'WA', 'AZ', 'MA', 'MI', 'TN', 'IN', 'CO'  # Batch 2
-    })
+# TODO: Fix other state scrapers:
+# - GA: Firebase App Check blocking
+# - PA: SSL cert invalid
+# - NY: Form selectors changed
+# - CA: hCaptcha protection
+# - TX: Selectors not matching 
+# - AZ: Now requires login
 
 # In-memory state for the SOS scraper
 _florida_scrape_state = {
