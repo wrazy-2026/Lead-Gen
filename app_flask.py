@@ -4999,6 +4999,49 @@ def florida_api_persisted():
     return jsonify(businesses)
 
 
+@app.route('/api/florida/delete-all', methods=['DELETE'])
+@login_required_custom
+def florida_api_delete_all():
+    """Delete all Florida businesses from database and clear in-memory state."""
+    try:
+        # Clear in-memory state
+        _florida_scrape_state["businesses"] = []
+        _florida_scrape_state["status"] = "idle"
+        _florida_scrape_state["message"] = ""
+        _florida_scrape_state["logs"] = []
+        
+        # Delete from Firestore
+        db = get_database()
+        florida_ref = db.db.collection('florida_leads')
+        
+        # Get all documents and delete in batches
+        docs = florida_ref.stream(timeout=30.0)
+        batch = db.db.batch()
+        count = 0
+        deleted = 0
+        
+        for doc in docs:
+            batch.delete(florida_ref.document(doc.id))
+            count += 1
+            deleted += 1
+            
+            # Commit every 450 docs (Firestore batch limit is 500)
+            if count >= 450:
+                batch.commit()
+                batch = db.db.batch()
+                count = 0
+        
+        # Commit remaining
+        if count > 0:
+            batch.commit()
+        
+        return jsonify({"status": "success", "message": f"Deleted {deleted} businesses."})
+        
+    except Exception as e:
+        logger.error(f"Error deleting Florida businesses: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route('/api/florida/download/csv')
 @login_required_custom
 def florida_download_csv():

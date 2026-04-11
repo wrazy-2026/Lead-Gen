@@ -137,55 +137,58 @@
                 <p class="text-xs text-gray-500 mt-1" x-text="businesses.length ? businesses.length + ' businesses found' : 'No results yet'"></p>
             </div>
             <div x-show="businesses.length > 0" class="flex items-center gap-2">
-                <a href="{{ url_for('florida_download_csv') }}" class="px-4 py-2 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold flex items-center gap-2">
-                    <i class="fas fa-file-csv"></i> Download CSV
+                <a href="{{ url_for('florida_download_csv') }}" class="px-3 py-1.5 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold flex items-center gap-1">
+                    <i class="fas fa-file-csv"></i> CSV
                 </a>
-                <a href="{{ url_for('florida_download_json') }}" class="px-4 py-2 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold flex items-center gap-2">
-                    <i class="fas fa-file-code"></i> Download JSON
+                <a href="{{ url_for('florida_download_json') }}" class="px-3 py-1.5 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold flex items-center gap-1">
+                    <i class="fas fa-file-code"></i> JSON
                 </a>
+                <button @click="deleteAllData()" class="px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20 hover:bg-red-500/20 hover:text-red-300 transition-all text-xs font-semibold flex items-center gap-1">
+                    <i class="fas fa-trash"></i> Delete All
+                </button>
             </div>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-xs">
                 <thead>
                     <tr class="border-b border-white/5 bg-white/[0.02]">
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">#</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Doc #</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Filing Date</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Principal Address</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Link</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">#</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Name</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Doc #</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Filing Date</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Address</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Category</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Link</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="businesses.length === 0">
                         <tr>
-                            <td colspan="8" class="px-4 py-12 text-center text-gray-500">
-                                <i class="fas fa-inbox text-3xl mb-3 block"></i>
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-500 text-xs">
+                                <i class="fas fa-inbox text-2xl mb-2 block"></i>
                                 <span x-text="isLoading ? 'Loading saved data...' : 'Run a scrape to see results here.'"></span>
                             </td>
                         </tr>
                     </template>
                     <template x-for="(biz, idx) in businesses" :key="idx">
                         <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                            <td class="px-4 py-3 text-gray-500" x-text="idx + 1"></td>
-                            <td class="px-4 py-3 text-white font-medium" x-text="biz.name || ''"></td>
-                            <td class="px-4 py-3 text-gray-300" x-text="biz.document_number || ''"></td>
-                            <td class="px-4 py-3">
+                            <td class="px-2 py-1.5 text-gray-500 text-[10px]" x-text="idx + 1"></td>
+                            <td class="px-2 py-1.5 text-white font-medium text-[11px] max-w-[200px] truncate" x-text="biz.name || ''"></td>
+                            <td class="px-2 py-1.5 text-gray-300 text-[10px]" x-text="biz.document_number || ''"></td>
+                            <td class="px-2 py-1.5">
                                 <span :class="(biz.status || '').toLowerCase().includes('active') ? 'text-green-400' : 'text-red-400'"
-                                    x-text="biz.status || ''"></span>
+                                    class="text-[10px]" x-text="biz.status || ''"></span>
                             </td>
-                            <td class="px-4 py-3 text-gray-300" x-text="biz.filing_date || ''"></td>
-                            <td class="px-4 py-3 text-gray-400 text-xs max-w-xs truncate" x-text="biz.principal_address || ''"></td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-0.5 bg-pink-500/10 text-pink-400 text-xs rounded-full" x-text="biz.category || ''"></span>
+                            <td class="px-2 py-1.5 text-gray-300 text-[10px]" x-text="biz.filing_date || ''"></td>
+                            <td class="px-2 py-1.5 text-gray-400 text-[10px] max-w-[180px] truncate" x-text="biz.principal_address || ''"></td>
+                            <td class="px-2 py-1.5">
+                                <span class="px-1.5 py-0.5 bg-pink-500/10 text-pink-400 text-[9px] rounded-full" x-text="biz.category || ''"></span>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-2 py-1.5">
                                 <template x-if="biz.detail_url">
-                                    <a :href="biz.detail_url" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-xs">
-                                        <i class="fas fa-external-link-alt mr-1"></i>View
+                                    <a :href="biz.detail_url" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-[10px]">
+                                        <i class="fas fa-external-link-alt"></i>
                                     </a>
                                 </template>
                             </td>
@@ -362,6 +365,28 @@ function floridaScraper() {
             } catch (_) {
                 // Fallback to persisted data
                 await this.loadPersistedData();
+            }
+        },
+
+        async deleteAllData() {
+            if (!confirm('Are you sure you want to delete ALL Florida scraper data? This cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const resp = await fetch('/api/florida/delete-all', {
+                    method: 'DELETE'
+                });
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    this.businesses = [];
+                    this.statusMessage = data.message;
+                    this.scrapeStatus = 'done';
+                } else {
+                    alert('Failed to delete: ' + (data.message || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Failed to delete: ' + e.message);
             }
         }
     };

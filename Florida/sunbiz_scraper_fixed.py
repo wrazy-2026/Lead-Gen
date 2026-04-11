@@ -143,10 +143,9 @@ class FixedSunbizScraper:
         """Return list of {name, doc_number, status, href} from the current results page."""
         rows: List[Dict] = []
 
-        # Navigation link texts to filter out
-        NAVIGATION_TEXTS = {
-            "previous on list", "next on list", "return to list",
-            "previous list", "next list", "return", "back",
+        # Navigation link texts and keywords to filter out
+        NAVIGATION_KEYWORDS = {
+            "previous", "next", "return", "back", "list",
         }
 
         # Results are in a table. Each data row has 3 <td> cells:
@@ -161,8 +160,8 @@ class FixedSunbizScraper:
             if len(tds) < 3:
                 continue
 
-            # First cell should have a link
-            link = await tds[0].query_selector("a")
+            # First cell should have a link to detail page
+            link = await tds[0].query_selector('a[href*="SearchResultDetail"]')
             if not link:
                 continue
 
@@ -175,16 +174,19 @@ class FixedSunbizScraper:
             if not name:
                 continue
 
-            # Skip navigation links (Previous/Next/Return)
-            if name.lower() in NAVIGATION_TEXTS:
-                continue
-
-            # Skip if href doesn't look like a detail page link
-            if href and "SearchResultDetail" not in href and "corporationdetail" not in href.lower():
+            # Skip rows that look like navigation (contain multiple nav keywords)
+            name_lower = name.lower()
+            nav_word_count = sum(1 for kw in NAVIGATION_KEYWORDS if kw in name_lower)
+            if nav_word_count >= 2:
                 continue
 
             # Skip if doc_number is empty or doesn't look like a valid document number
+            # Valid doc numbers are alphanumeric, at least 4 chars, like L25000400608
             if not doc_number or len(doc_number) < 4:
+                continue
+            
+            # Additional check: doc_number should start with letter or digit
+            if not doc_number[0].isalnum():
                 continue
 
             rows.append({
