@@ -1,0 +1,38 @@
+STATE SCRAPER TEST RESULTS
+Tested: 2026-04-12 07:40:10
+Keyword: plumber
+
+WORKING (0):
+
+NO_RESULTS (26):
+  FL
+  OK
+  MO
+  SC
+  VT
+  WI
+  NH
+  KS
+  KY
+  LA
+  AR
+  SD
+  OR
+  RI
+  MS
+  NM
+  ME
+  DE
+  HI
+  AL
+  AK
+  IA
+  CO
+  TN
+  MA
+  NC
+
+TIMEOUT (1):
+  NE
+
+ERRORS (0):

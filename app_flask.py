@@ -4801,20 +4801,20 @@ except ImportError:
     MULTISTATE_CONFIGS = {}
 
 # Supported states for scraping
-# Standard HTML states that don't require JS or have CAPTCHAs
+# NOTE: As of 2025-01-12, ALL states tested and found non-functional
+# All have outdated CSS selectors - websites have changed their HTML structure
+# Only FL is kept active for fixing/testing
 ACTIVE_SCRAPER_STATES = {'FL'}
-if MULTISTATE_AVAILABLE:
-    # Standard HTML states (27 total - IL and UT removed due to reCAPTCHA)
-    ACTIVE_SCRAPER_STATES.update({
-        # Working
-        'FL',
-        # Standard HTML - Batch 3
-        'OK', 'MO', 'SC', 'VT', 'WI', 'NE', 'NH', 'KS', 'KY',
-        'LA', 'AR', 'SD', 'OR', 'RI', 'MS', 'NM', 'ME', 'DE', 'HI',
-        'AL', 'AK', 'IA', 'CO', 'TN', 'MA', 'NC',
-        # IL removed - reCAPTCHA Enterprise
-        # UT removed - reCAPTCHA image challenge
-    })
+# DISABLED - All 27 states failed testing (selectors outdated, sites changed)
+# if MULTISTATE_AVAILABLE:
+#     ACTIVE_SCRAPER_STATES.update({
+#         # ALL FAILED - Wrong selectors:
+#         'OK', 'MO', 'SC', 'VT', 'WI', 'NE', 'NH', 'KS', 'KY',
+#         'LA', 'AR', 'SD', 'OR', 'RI', 'MS', 'NM', 'ME', 'DE', 'HI',
+#         'AL', 'AK', 'IA', 'CO', 'TN', 'MA', 'NC',
+#         # IL - reCAPTCHA Enterprise
+#         # UT - reCAPTCHA image challenge
+#     })
 
 # In-memory state for the SOS scraper
 _florida_scrape_state = {
