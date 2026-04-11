@@ -143,10 +143,9 @@ class FixedSunbizScraper:
         """Return list of {name, doc_number, status, href} from the current results page."""
         rows: List[Dict] = []
 
-        # Navigation link texts and keywords to filter out
-        NAVIGATION_KEYWORDS = {
-            "previous", "next", "return", "back", "list",
-        }
+        # Valid Florida document numbers match pattern: Letter + numbers (e.g., P15000005427, L09000043622)
+        import re
+        DOC_NUMBER_PATTERN = re.compile(r'^[A-Z]\d{8,}$', re.I)
 
         # Results are in a table. Each data row has 3 <td> cells:
         #   <td><a href="/Inquiry/CorporationSearch/SearchResultDetail?...">NAME</a></td>
@@ -160,35 +159,36 @@ class FixedSunbizScraper:
             if len(tds) < 3:
                 continue
 
-            # First cell should have a link to detail page
+            # Get all text from first cell
+            first_cell_text = (await tds[0].text_content() or "").strip()
+            
+            # Find link in first cell - look for any link with SearchResultDetail
             link = await tds[0].query_selector('a[href*="SearchResultDetail"]')
             if not link:
                 continue
 
+            # Get business name from link text
             name = (await link.text_content() or "").strip()
             href = await link.get_attribute("href") or ""
+            
+            # Get document number from second cell
             doc_number = (await tds[1].text_content() or "").strip()
+            
+            # Get status from third cell
             status = (await tds[2].text_content() or "").strip()
 
             # Skip if no name
             if not name:
+                self._log(f"  Skipping row: empty name")
                 continue
 
-            # Skip rows that look like navigation (contain multiple nav keywords)
-            name_lower = name.lower()
-            nav_word_count = sum(1 for kw in NAVIGATION_KEYWORDS if kw in name_lower)
-            if nav_word_count >= 2:
+            # Validate document number format (Letter + 8+ digits)
+            if not DOC_NUMBER_PATTERN.match(doc_number):
+                self._log(f"  Skipping row: invalid doc number '{doc_number}' for '{name[:30]}'")
                 continue
 
-            # Skip if doc_number is empty or doesn't look like a valid document number
-            # Valid doc numbers are alphanumeric, at least 4 chars, like L25000400608
-            if not doc_number or len(doc_number) < 4:
-                continue
+            self._log(f"  Found business: {name[:50]} | {doc_number} | {status}")
             
-            # Additional check: doc_number should start with letter or digit
-            if not doc_number[0].isalnum():
-                continue
-
             rows.append({
                 "name": name,
                 "document_number": doc_number,
@@ -196,7 +196,7 @@ class FixedSunbizScraper:
                 "href": href,
             })
 
-        self._log(f"Parsed {len(rows)} business rows from results table.")
+        self._log(f"Parsed {len(rows)} valid business rows from results table.")
         return rows
 
     # ── get "Next List" link ─────────────────────────────────────────────
@@ -375,10 +375,12 @@ class FixedSunbizScraper:
 
             biz = await self._scrape_detail(page, row["href"], keyword)
             if biz:
-                # Ensure name/doc/status fallback from table row
-                biz.setdefault("name", row["name"])
-                biz.setdefault("document_number", row["document_number"])
-                biz.setdefault("status", row["status"])
+                # ALWAYS use name from table row (it's the most reliable)
+                biz["name"] = row["name"]
+                biz["document_number"] = row["document_number"]
+                # Use status from detail page if available, otherwise from table
+                if not biz.get("status"):
+                    biz["status"] = row["status"]
                 biz.setdefault("detail_url", detail_url)
                 businesses.append(biz)
                 self._log(f"  OK - filing_date={biz.get('filing_date','N/A')}, status={biz.get('status','N/A')}")
