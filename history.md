@@ -2,6 +2,20 @@
 
 ## April 12, 2026 (Latest Update)
 
+### Knowledge Base Page Added
+
+New `/knowledgebase` page with all 50 state Secretary of State business search websites:
+- Color-coded status (Working, JSON API, Standard HTML, JS Required, CAPTCHA/Login)
+- Search filter to find states quickly
+- Direct links to each state's SOS portal
+- Notes on scraping difficulty for each state
+
+Access from sidebar: **Scrapers > Knowledge Base**
+
+---
+
+## April 12, 2026
+
 ### State Scraper Status Update
 
 **Only Florida (FL) is currently working.** Other state scrapers are disabled due to:
