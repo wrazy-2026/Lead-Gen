@@ -132,7 +132,18 @@
                               text-gray-300 hover:bg-white/5 hover:text-pink-400
                               {% endif %}">
                         <i class="fas fa-sun text-lg {% if request.endpoint in ('florida_scraper',) %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
-                        Florida Scraper
+                        SOS Scraper
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('knowledgebase') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'knowledgebase' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-book text-lg {% if request.endpoint == 'knowledgebase' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Knowledge Base
                     </a>
                 </li>
             </ul>

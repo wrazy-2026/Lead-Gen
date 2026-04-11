@@ -2434,6 +2434,13 @@ def clear_database():
 # DOMAIN LOOKUP ROUTES
 # ============================================================================
 
+@app.route('/knowledgebase')
+@login_required_custom
+def knowledgebase():
+    """Knowledge base page with state SOS website info."""
+    return render_template('knowledgebase.html')
+
+
 @app.route('/domain-lookup')
 @login_required_custom
 def domain_lookup_page():

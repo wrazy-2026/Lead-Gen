@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+
+{% block title %}Knowledge Base - State SOS Websites{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-dark-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">
+                <i class="fas fa-book text-pink-400 mr-3"></i>Knowledge Base
+            </h1>
+            <p class="text-gray-400">Secretary of State business search websites for all 50 states + DC & Puerto Rico</p>
+        </div>
+
+        <!-- Legend -->
+        <div class="bg-dark-800 border border-gray-700 rounded-xl p-4 mb-6">
+            <h3 class="text-sm font-semibold text-gray-300 mb-3">Status Legend</h3>
+            <div class="flex flex-wrap gap-4 text-sm">
+                <span class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                    <span class="text-gray-300">Working</span>
+                </span>
+                <span class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span class="text-gray-300">JSON API (Easy)</span>
+                </span>
+                <span class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                    <span class="text-gray-300">Standard HTML</span>
+                </span>
+                <span class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+                    <span class="text-gray-300">JS Required</span>
+                </span>
+                <span class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                    <span class="text-gray-300">CAPTCHA/Login Required</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="mb-6">
+            <input type="text" 
+                   id="stateSearch" 
+                   placeholder="Search states..." 
+                   class="w-full md:w-96 px-4 py-2 bg-dark-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-pink-500"
+                   onkeyup="filterStates()">
+        </div>
+
+        <!-- States Table -->
+        <div class="bg-dark-800 border border-gray-700 rounded-xl overflow-hidden">
+            <table class="w-full" id="statesTable">
+                <thead class="bg-dark-700">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">State</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">SOS Website</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Notes</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    <!-- Working -->
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">FL</span> <span class="text-gray-400">Florida</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400"><span class="w-2 h-2 rounded-full bg-green-500"></span>Working</span></td>
+                        <td class="px-4 py-3"><a href="https://search.sunbiz.org/Inquiry/CorporationSearch/ByName" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">search.sunbiz.org</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Most reliable SOS portal</td>
+                    </tr>
+
+                    <!-- JSON APIs -->
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">MI</span> <span class="text-gray-400">Michigan</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-500"></span>JSON API</span></td>
+                        <td class="px-4 py-3"><a href="https://cofs.lara.state.mi.us/SearchApi/Search/Search" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">cofs.lara.state.mi.us</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">LARA JSON API</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">MT</span> <span class="text-gray-400">Montana</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-500"></span>JSON API</span></td>
+                        <td class="px-4 py-3"><a href="https://biz.sosmt.gov/search" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">biz.sosmt.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Tyler Technologies API</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">ND</span> <span class="text-gray-400">North Dakota</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-500"></span>JSON API</span></td>
+                        <td class="px-4 py-3"><a href="https://firststop.sos.nd.gov/search/business" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">firststop.sos.nd.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Tyler Technologies API</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">WA</span> <span class="text-gray-400">Washington</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-500"></span>JSON API</span></td>
+                        <td class="px-4 py-3"><a href="https://ccfs.sos.wa.gov/#/AdvancedSearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">ccfs.sos.wa.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">JSON API available</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">ID</span> <span class="text-gray-400">Idaho</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-500"></span>JSON API</span></td>
+                        <td class="px-4 py-3"><a href="https://sosbiz.idaho.gov/search/business" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">sosbiz.idaho.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Tyler Technologies API</td>
+                    </tr>
+
+                    <!-- Standard HTML (Easy) -->
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">AL</span> <span class="text-gray-400">Alabama</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://arc-sos.state.al.us/cgi/corpdetl.mbr/output" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">arc-sos.state.al.us</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">CGI-based search</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">AK</span> <span class="text-gray-400">Alaska</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.commerce.alaska.gov/cbp/main/search/entities" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">commerce.alaska.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Commerce portal</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">AR</span> <span class="text-gray-400">Arkansas</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.sos.arkansas.gov/corps/search_all.php" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">sos.arkansas.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">PHP search</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">CO</span> <span class="text-gray-400">Colorado</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.sos.state.co.us/biz/BusinessEntityCriteriaExt.do" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">sos.state.co.us</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">DE</span> <span class="text-gray-400">Delaware</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://icis.corp.delaware.gov/ecorp/entitysearch/namesearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">icis.corp.delaware.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">ASP.NET ViewState</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">HI</span> <span class="text-gray-400">Hawaii</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://hbe.ehawaii.gov/documents/search.html" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">hbe.ehawaii.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">eHawaii portal</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">IL</span> <span class="text-gray-400">Illinois</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.ilsos.gov/corporatellc/CorporateLlcController" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">ilsos.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">IA</span> <span class="text-gray-400">Iowa</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://sos.iowa.gov/search/business/(S(x))/search.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">sos.iowa.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">ASP.NET</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">KS</span> <span class="text-gray-400">Kansas</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.kansas.gov/bess/flow/main?execution=e1s1" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">kansas.gov/bess</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">KY</span> <span class="text-gray-400">Kentucky</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://web.sos.ky.gov/bussearchnprofile/(S(x))/default.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">web.sos.ky.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">ASP.NET</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">LA</span> <span class="text-gray-400">Louisiana</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://coraweb.sos.la.gov/CommercialSearch/CommercialSearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">coraweb.sos.la.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">CORA system</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">ME</span> <span class="text-gray-400">Maine</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://icrs.informe.org/nei-sos-icrs/ICRS?MainPage=x" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">icrs.informe.org</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">InforME portal</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">MA</span> <span class="text-gray-400">Massachusetts</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://corp.sec.state.ma.us/CorpWeb/CorpSearch/CorpSearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">corp.sec.state.ma.us</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">ASP.NET</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">MS</span> <span class="text-gray-400">Mississippi</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://corp.sos.ms.gov/corp/portal/c/page/corpBusinessIdSearch/portal.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">corp.sos.ms.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">MO</span> <span class="text-gray-400">Missouri</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://bsd.sos.mo.gov/BusinessEntity/BESearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">bsd.sos.mo.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">NE</span> <span class="text-gray-400">Nebraska</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.nebraska.gov/sos/corp/corpsearch.cgi" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">nebraska.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">CGI search</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">NH</span> <span class="text-gray-400">New Hampshire</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://quickstart.sos.nh.gov/online/BusinessInquire" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">quickstart.sos.nh.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">NM</span> <span class="text-gray-400">New Mexico</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://portal.sos.state.nm.us/BFS/online/CorporationBusinessSearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">portal.sos.state.nm.us</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">NC</span> <span class="text-gray-400">North Carolina</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.sosnc.gov/online_services/search/by_title/_Business_Registration" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">sosnc.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">OK</span> <span class="text-gray-400">Oklahoma</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.sos.ok.gov/corp/corpInquiryFind.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">sos.ok.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">OR</span> <span class="text-gray-400">Oregon</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="http://egov.sos.state.or.us/br/pkg_web_name_srch_inq.login" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">egov.sos.state.or.us</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">RI</span> <span class="text-gray-400">Rhode Island</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="http://business.sos.ri.gov/CorpWeb/CorpSearch/CorpSearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">business.sos.ri.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">SC</span> <span class="text-gray-400">South Carolina</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://businessfilings.sc.gov/BusinessFiling/Entity/Search" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">businessfilings.sc.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">SD</span> <span class="text-gray-400">South Dakota</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://sosenterprise.sd.gov/BusinessServices/Business/FilingSearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">sosenterprise.sd.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">TN</span> <span class="text-gray-400">Tennessee</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://tnbear.tn.gov/Ecommerce/FilingSearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">tnbear.tn.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">BEAR system</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">TX</span> <span class="text-gray-400">Texas</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://mycpa.cpa.state.tx.us/coa/coaSearchBtn" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">mycpa.cpa.state.tx.us</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Comptroller search</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">UT</span> <span class="text-gray-400">Utah</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://secure.utah.gov/bes/" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">secure.utah.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">VT</span> <span class="text-gray-400">Vermont</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://bizfilings.vermont.gov/online/BusinessInquire" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">bizfilings.vermont.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">WI</span> <span class="text-gray-400">Wisconsin</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://www.wdfi.org/apps/CorpSearch/Search.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">wdfi.org</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">WDFI search</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">WY</span> <span class="text-gray-400">Wyoming</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://wyobiz.wyo.gov/Business/FilingSearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">wyobiz.wyo.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+
+                    <!-- JS Required -->
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">CT</span> <span class="text-gray-400">Connecticut</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://service.ct.gov/business/s/onlinebusinesssearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">service.ct.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Salesforce portal</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">IN</span> <span class="text-gray-400">Indiana</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://bsd.sos.in.gov/publicbusinesssearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">bsd.sos.in.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Requires Playwright</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">MD</span> <span class="text-gray-400">Maryland</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://egov.maryland.gov/BusinessExpress/EntitySearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">egov.maryland.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">eGov portal</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">MN</span> <span class="text-gray-400">Minnesota</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://mblsportal.sos.state.mn.us/Business/Search" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">mblsportal.sos.state.mn.us</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Requires Playwright</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">NJ</span> <span class="text-gray-400">New Jersey</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://www.njportal.com/DOR/BusinessNameSearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">njportal.com</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Requires Playwright</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">OH</span> <span class="text-gray-400">Ohio</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://businesssearch.ohiosos.gov/" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">businesssearch.ohiosos.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Requires Playwright</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">VA</span> <span class="text-gray-400">Virginia</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://cis.scc.virginia.gov/EntitySearch/Index" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">cis.scc.virginia.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Virginia SCC</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">WV</span> <span class="text-gray-400">West Virginia</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://apps.wv.gov/SOS/BusinessEntitySearch/" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">apps.wv.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Requires Playwright</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">DC</span> <span class="text-gray-400">District of Columbia</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400"><span class="w-2 h-2 rounded-full bg-orange-500"></span>JS Required</span></td>
+                        <td class="px-4 py-3"><a href="https://corponline.dcra.dc.gov/BizEntity.aspx/NavigateToSearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">corponline.dcra.dc.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">DCRA portal</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">PR</span> <span class="text-gray-400">Puerto Rico</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>Standard</span></td>
+                        <td class="px-4 py-3"><a href="https://prcorpfiling.f1hst.com/CorporationSearch.aspx" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">prcorpfiling.f1hst.com</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Standard form</td>
+                    </tr>
+
+                    <!-- Hardest (CAPTCHA/Login) -->
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">AZ</span> <span class="text-gray-400">Arizona</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400"><span class="w-2 h-2 rounded-full bg-red-500"></span>Login Required</span></td>
+                        <td class="px-4 py-3"><a href="https://ecorp.azcc.gov/EntitySearch/Index" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">ecorp.azcc.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Requires account login</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">CA</span> <span class="text-gray-400">California</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400"><span class="w-2 h-2 rounded-full bg-red-500"></span>CAPTCHA</span></td>
+                        <td class="px-4 py-3"><a href="https://bizfileonline.sos.ca.gov/search/business" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">bizfileonline.sos.ca.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">hCaptcha protection</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">GA</span> <span class="text-gray-400">Georgia</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400"><span class="w-2 h-2 rounded-full bg-red-500"></span>Firebase Block</span></td>
+                        <td class="px-4 py-3"><a href="https://ecorp.sos.ga.gov/BusinessSearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">ecorp.sos.ga.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Firebase App Check blocking</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">NV</span> <span class="text-gray-400">Nevada</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400"><span class="w-2 h-2 rounded-full bg-red-500"></span>Bot Detection</span></td>
+                        <td class="px-4 py-3"><a href="https://esos.nv.gov/EntitySearch/OnlineEntitySearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">esos.nv.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Aggressive bot detection</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">NY</span> <span class="text-gray-400">New York</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400"><span class="w-2 h-2 rounded-full bg-red-500"></span>Complex</span></td>
+                        <td class="px-4 py-3"><a href="https://appext20.dos.ny.gov/corp_public/CORPSEARCH.ENTITY_SEARCH_ENTRY" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">appext20.dos.ny.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">Complex portal structure</td>
+                    </tr>
+                    <tr class="hover:bg-dark-700 state-row">
+                        <td class="px-4 py-3"><span class="font-semibold text-white">PA</span> <span class="text-gray-400">Pennsylvania</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400"><span class="w-2 h-2 rounded-full bg-red-500"></span>SSL Error</span></td>
+                        <td class="px-4 py-3"><a href="https://www.corporations.pa.gov/search/corpsearch" target="_blank" class="text-pink-400 hover:text-pink-300 text-sm break-all">corporations.pa.gov</a></td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">SSL certificate error</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Stats -->
+        <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="bg-dark-800 border border-gray-700 rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold text-green-400">1</div>
+                <div class="text-xs text-gray-400">Working</div>
+            </div>
+            <div class="bg-dark-800 border border-gray-700 rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold text-blue-400">5</div>
+                <div class="text-xs text-gray-400">JSON APIs</div>
+            </div>
+            <div class="bg-dark-800 border border-gray-700 rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold text-yellow-400">31</div>
+                <div class="text-xs text-gray-400">Standard HTML</div>
+            </div>
+            <div class="bg-dark-800 border border-gray-700 rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold text-orange-400">9</div>
+                <div class="text-xs text-gray-400">JS Required</div>
+            </div>
+            <div class="bg-dark-800 border border-gray-700 rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold text-red-400">6</div>
+                <div class="text-xs text-gray-400">Blocked</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterStates() {
+    const query = document.getElementById('stateSearch').value.toLowerCase();
+    const rows = document.querySelectorAll('.state-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}
