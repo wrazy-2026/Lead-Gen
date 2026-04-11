@@ -2,6 +2,25 @@
 
 ## April 12, 2026 (Latest Update)
 
+### State Scraper Status Update
+
+**Only Florida (FL) is currently working.** Other state scrapers are disabled due to:
+
+| State | Issue |
+|-------|-------|
+| GA | Firebase App Check blocking page load |
+| PA | SSL certificate error (ERR_CERT_COMMON_NAME_INVALID) |
+| NY | Form selectors changed, search elements not found |
+| CA | hCaptcha protection on bizfileonline.sos.ca.gov |
+| TX | Selectors not matching page structure |
+| AZ | Now requires login (Arizona Business Center) |
+
+The StateConfig entries exist in `scrapers/multistate_scraper.py` but the websites have changed or added anti-bot protection. Each state needs individual debugging and selector updates.
+
+---
+
+## April 12, 2026
+
 ### Multi-State SOS Scraper Expansion - 18 States
 
 **18 States Now Active**
