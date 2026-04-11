@@ -1,28 +1,28 @@
 {% extends 'base.html' %}
 
-{% block title %}Florida Sunbiz Scraper - LeadGen Pro{% endblock %}
-{% block page_title %}Florida Sunbiz Scraper{% endblock %}
+{% block title %}SOS Business Scraper - LeadGen Pro{% endblock %}
+{% block page_title %}SOS Business Scraper{% endblock %}
 
 {% block content %}
-<div class="space-y-8 animate-fade-in" x-data="floridaScraper()" x-init="init()">
+<div class="space-y-6 animate-fade-in" x-data="sosScraper()" x-init="init()">
 
     <!-- Header -->
-    <div class="glass-dark rounded-3xl p-8 border border-white/10 shadow-2xl relative overflow-hidden">
+    <div class="glass-dark rounded-3xl p-6 border border-white/10 shadow-2xl relative overflow-hidden">
         <div class="absolute -right-20 -top-20 w-64 h-64 bg-orange-500/20 rounded-full blur-[100px]"></div>
         <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-pink-500/20 rounded-full blur-[100px]"></div>
-        <div class="relative flex items-center gap-8">
-            <div class="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-pink-600 shadow-lg glow-pink">
-                <i class="fas fa-sun text-4xl text-white"></i>
+        <div class="relative flex items-center gap-6">
+            <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-pink-600 shadow-lg glow-pink">
+                <i class="fas fa-building text-3xl text-white"></i>
             </div>
             <div>
-                <h1 class="text-4xl font-extrabold text-white tracking-tight">Florida Sunbiz <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-400">Scraper</span></h1>
-                <p class="text-gray-400 mt-2 text-lg">Search Florida home-service businesses from the Sunbiz registry</p>
-                <div class="flex items-center gap-4 mt-4">
-                    <span class="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/20">
-                        <i class="fas fa-bolt mr-1"></i> Real-time Scraping
+                <h1 class="text-3xl font-extrabold text-white tracking-tight">SOS Business <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-400">Scraper</span></h1>
+                <p class="text-gray-400 mt-1 text-sm">Scrape businesses from Secretary of State registries</p>
+                <div class="flex items-center gap-3 mt-3">
+                    <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] font-bold rounded-full border border-green-500/20">
+                        <i class="fas fa-bolt mr-1"></i> Real-time
                     </span>
-                    <span class="px-3 py-1 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full border border-orange-500/20">
-                        <i class="fas fa-database mr-1"></i> Sunbiz Registry
+                    <span class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-[10px] font-bold rounded-full border border-orange-500/20">
+                        <i class="fas fa-flag-usa mr-1"></i> <span x-text="availableStates.length"></span> States
                     </span>
                 </div>
             </div>
@@ -31,60 +31,70 @@
 
     <!-- Search Settings -->
     <div class="glass-dark rounded-2xl border border-white/5 overflow-hidden">
-        <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-            <h3 class="font-bold text-white flex items-center gap-2">
+        <div class="px-4 py-3 border-b border-white/5 bg-white/5 flex items-center justify-between">
+            <h3 class="font-bold text-white text-sm flex items-center gap-2">
                 <i class="fas fa-search text-pink-500"></i> Search Settings
             </h3>
-            <span class="text-xs text-gray-500">Click keywords to select/deselect</span>
         </div>
-        <div class="p-6 space-y-6">
-            <!-- Keyword Tags -->
+        <div class="p-4 space-y-4">
+            <!-- State Selector -->
+            <div class="flex flex-wrap items-end gap-4">
+                <div class="w-48">
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">State</label>
+                    <select x-model="selectedState" 
+                        class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-pink-500/50">
+                        <template x-for="st in availableStates" :key="st.code">
+                            <option :value="st.code" x-text="st.code + ' - ' + st.name + (st.active ? '' : ' (Coming Soon)')"
+                                :disabled="!st.active"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="w-28">
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Max per keyword</label>
+                    <input type="number" x-model.number="maxResults" min="1" max="500"
+                        class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:outline-none focus:border-pink-500/50">
+                </div>
+            </div>
+            
+            <!-- Keywords -->
             <div>
-                <label class="block text-sm font-semibold text-gray-300 mb-3">Keywords</label>
-                <div class="flex flex-wrap gap-2" id="keywordTags">
+                <label class="block text-xs font-semibold text-gray-300 mb-2">Keywords (click to select)</label>
+                <div class="flex flex-wrap gap-1.5">
                     <template x-for="kw in allKeywords" :key="kw">
                         <button @click="toggleKeyword(kw)"
                             :class="selectedKeywords.has(kw)
-                                ? 'bg-gradient-to-r from-pink-600 to-purple-700 text-white border-pink-500/50 shadow-lg shadow-pink-500/20'
-                                : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:text-white'"
-                            class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200"
+                                ? 'bg-gradient-to-r from-pink-600 to-purple-700 text-white border-pink-500/50'
+                                : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'"
+                            class="px-2 py-1 rounded-full text-[10px] font-semibold border transition-all"
                             x-text="kw">
                         </button>
                     </template>
                 </div>
             </div>
 
-            <!-- Custom Keyword + Max Results -->
-            <div class="flex flex-wrap items-end gap-4">
-                <div class="flex-1 min-w-[200px]">
-                    <label for="customKeyword" class="block text-sm font-semibold text-gray-300 mb-2">Custom Keyword</label>
-                    <input type="text" id="customKeyword" x-model="customKeyword" @keydown.enter.prevent="addCustomKeyword()"
-                        placeholder="e.g. fencing"
-                        class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 transition-all">
-                </div>
-                <button @click="addCustomKeyword()" class="px-4 py-2.5 bg-white/10 text-gray-300 rounded-xl border border-white/10 hover:bg-white/20 hover:text-white transition-all font-semibold text-sm">
-                    <i class="fas fa-plus mr-1"></i> Add
+            <!-- Custom Keyword -->
+            <div class="flex items-center gap-2">
+                <input type="text" x-model="customKeyword" @keydown.enter.prevent="addCustomKeyword()"
+                    placeholder="Add custom keyword..."
+                    class="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-pink-500/50">
+                <button @click="addCustomKeyword()" class="px-3 py-2 bg-white/10 text-gray-300 rounded-lg border border-white/10 hover:bg-white/20 text-xs font-semibold">
+                    <i class="fas fa-plus"></i>
                 </button>
-                <div class="w-32">
-                    <label for="maxResults" class="block text-sm font-semibold text-gray-300 mb-2">Max per keyword</label>
-                    <input type="number" id="maxResults" x-model.number="maxResults" min="1" max="500"
-                        class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 transition-all text-center">
-                </div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex items-center gap-3 flex-wrap">
+            <div class="flex items-center gap-2 flex-wrap">
                 <button @click="startScrape()" :disabled="isRunning || selectedKeywords.size === 0"
-                    :class="isRunning ? 'opacity-50 cursor-not-allowed' : 'hover:from-pink-500 hover:to-purple-600 hover:scale-[1.02] active:scale-[0.98]'"
-                    class="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-700 text-white rounded-xl font-bold shadow-lg shadow-pink-500/20 transition-all duration-300 flex items-center gap-2">
+                    :class="isRunning ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'"
+                    class="px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-700 text-white rounded-lg font-bold text-sm shadow-lg transition-all flex items-center gap-2">
                     <i :class="isRunning ? 'fas fa-spinner fa-spin' : 'fas fa-play'"></i>
                     <span x-text="isRunning ? 'Scraping...' : 'Start Scraping'"></span>
                 </button>
-                <button @click="selectAll()" class="px-4 py-2.5 bg-white/5 text-gray-300 rounded-xl border border-white/10 hover:bg-white/10 hover:text-white transition-all text-sm font-semibold">
+                <button @click="selectAll()" class="px-3 py-2 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 text-xs font-semibold">
                     Select All
                 </button>
-                <button @click="selectNone()" class="px-4 py-2.5 bg-white/5 text-gray-300 rounded-xl border border-white/10 hover:bg-white/10 hover:text-white transition-all text-sm font-semibold">
-                    Clear All
+                <button @click="selectNone()" class="px-3 py-2 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 text-xs font-semibold">
+                    Clear
                 </button>
             </div>
         </div>
@@ -97,7 +107,7 @@
             'bg-green-500/10 border-green-500/20 text-green-400': scrapeStatus === 'done',
             'bg-red-500/10 border-red-500/20 text-red-400': scrapeStatus === 'error'
         }"
-        class="rounded-xl px-5 py-3 border flex items-center gap-3 text-sm font-medium">
+        class="rounded-lg px-4 py-2 border flex items-center gap-2 text-xs font-medium">
         <i :class="{
             'fas fa-spinner fa-spin': scrapeStatus === 'running',
             'fas fa-check-circle': scrapeStatus === 'done',
@@ -106,45 +116,81 @@
         <span x-text="statusMessage"></span>
     </div>
 
-    <!-- Log Panel -->
-    <div class="glass-dark rounded-2xl border border-white/5 overflow-hidden">
-        <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-            <h3 class="font-bold text-white flex items-center gap-2">
-                <i class="fas fa-terminal text-pink-500"></i> Scraper Log
+    <!-- Log Panel (Collapsible) -->
+    <div class="glass-dark rounded-xl border border-white/5 overflow-hidden">
+        <div class="px-4 py-2 border-b border-white/5 bg-white/5 flex items-center justify-between cursor-pointer" @click="showLog = !showLog">
+            <h3 class="font-bold text-white text-xs flex items-center gap-2">
+                <i class="fas fa-terminal text-pink-500"></i> Log
+                <i :class="showLog ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-gray-500 text-[10px]"></i>
             </h3>
-            <div class="flex items-center gap-3">
-                <label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
-                    <input type="checkbox" x-model="autoScroll" class="rounded border-gray-600 bg-white/10 text-pink-500 focus:ring-pink-500/50">
+            <div class="flex items-center gap-2" @click.stop>
+                <label class="flex items-center gap-1 text-[10px] text-gray-400 cursor-pointer">
+                    <input type="checkbox" x-model="autoScroll" class="rounded border-gray-600 bg-white/10 text-pink-500 w-3 h-3">
                     Auto-scroll
                 </label>
-                <button @click="clearLog()" class="px-3 py-1.5 bg-white/5 text-gray-400 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold">
+                <button @click="clearLog()" class="px-2 py-1 bg-white/5 text-gray-400 rounded border border-white/10 hover:bg-white/10 text-[10px]">
                     Clear
                 </button>
             </div>
         </div>
-        <div id="logBox" class="p-4 h-72 overflow-y-auto font-mono text-xs leading-relaxed bg-[#0a0a1a]">
+        <div x-show="showLog" x-collapse id="logBox" class="p-3 h-40 overflow-y-auto font-mono text-[10px] leading-relaxed bg-[#0a0a1a]">
             <div class="text-gray-600">Waiting for scrape to start...</div>
         </div>
     </div>
 
-    <!-- Results Section -->
-    <div class="glass-dark rounded-2xl border border-white/5 overflow-hidden">
-        <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-            <div>
-                <h3 class="font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-table text-pink-500"></i> Results
-                </h3>
-                <p class="text-xs text-gray-500 mt-1" x-text="businesses.length ? businesses.length + ' businesses found' : 'No results yet'"></p>
+    <!-- Results Section with Filters -->
+    <div class="glass-dark rounded-xl border border-white/5 overflow-hidden">
+        <div class="px-4 py-3 border-b border-white/5 bg-white/5">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <i class="fas fa-table text-pink-500"></i> Results
+                    </h3>
+                    <p class="text-[10px] text-gray-500 mt-0.5" x-text="filteredBusinesses.length + ' of ' + businesses.length + ' businesses'"></p>
+                </div>
+                <div x-show="businesses.length > 0" class="flex items-center gap-1.5">
+                    <button @click="exportFiltered('csv')" class="px-2 py-1 bg-white/5 text-gray-300 rounded border border-white/10 hover:bg-white/10 text-[10px] font-semibold flex items-center gap-1">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </button>
+                    <button @click="exportFiltered('json')" class="px-2 py-1 bg-white/5 text-gray-300 rounded border border-white/10 hover:bg-white/10 text-[10px] font-semibold flex items-center gap-1">
+                        <i class="fas fa-file-code"></i> JSON
+                    </button>
+                    <button @click="deleteAllData()" class="px-2 py-1 bg-red-500/10 text-red-400 rounded border border-red-500/20 hover:bg-red-500/20 text-[10px] font-semibold flex items-center gap-1">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
-            <div x-show="businesses.length > 0" class="flex items-center gap-2">
-                <a href="{{ url_for('florida_download_csv') }}" class="px-3 py-1.5 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold flex items-center gap-1">
-                    <i class="fas fa-file-csv"></i> CSV
-                </a>
-                <a href="{{ url_for('florida_download_json') }}" class="px-3 py-1.5 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold flex items-center gap-1">
-                    <i class="fas fa-file-code"></i> JSON
-                </a>
-                <button @click="deleteAllData()" class="px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20 hover:bg-red-500/20 hover:text-red-300 transition-all text-xs font-semibold flex items-center gap-1">
-                    <i class="fas fa-trash"></i> Delete All
+            
+            <!-- Filters Row -->
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center gap-1">
+                    <span class="text-[10px] text-gray-400">Status:</span>
+                    <select x-model="filterStatus" class="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] text-white focus:outline-none">
+                        <option value="">All</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="text-[10px] text-gray-400">Category:</span>
+                    <select x-model="filterCategory" class="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] text-white focus:outline-none">
+                        <option value="">All</option>
+                        <template x-for="cat in uniqueCategories" :key="cat">
+                            <option :value="cat" x-text="cat"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="text-[10px] text-gray-400">State:</span>
+                    <select x-model="filterState" class="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] text-white focus:outline-none">
+                        <option value="">All</option>
+                        <template x-for="st in uniqueStates" :key="st">
+                            <option :value="st" x-text="st"></option>
+                        </template>
+                    </select>
+                </div>
+                <button @click="clearFilters()" class="px-2 py-1 bg-white/5 text-gray-400 rounded border border-white/10 hover:bg-white/10 text-[10px]">
+                    Clear Filters
                 </button>
             </div>
         </div>
@@ -156,6 +202,7 @@
                         <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Name</th>
                         <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Doc #</th>
                         <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">State</th>
                         <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Filing Date</th>
                         <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Address</th>
                         <th class="px-2 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Category</th>
@@ -163,31 +210,32 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-if="businesses.length === 0">
+                    <template x-if="filteredBusinesses.length === 0">
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500 text-xs">
-                                <i class="fas fa-inbox text-2xl mb-2 block"></i>
-                                <span x-text="isLoading ? 'Loading saved data...' : 'Run a scrape to see results here.'"></span>
+                            <td colspan="9" class="px-4 py-6 text-center text-gray-500 text-xs">
+                                <i class="fas fa-inbox text-xl mb-2 block"></i>
+                                <span x-text="isLoading ? 'Loading saved data...' : (businesses.length > 0 ? 'No results match filters' : 'Run a scrape to see results here.')"></span>
                             </td>
                         </tr>
                     </template>
-                    <template x-for="(biz, idx) in businesses" :key="idx">
+                    <template x-for="(biz, idx) in filteredBusinesses" :key="idx">
                         <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                             <td class="px-2 py-1.5 text-gray-500 text-[10px]" x-text="idx + 1"></td>
-                            <td class="px-2 py-1.5 text-white font-medium text-[11px] max-w-[200px] truncate" x-text="biz.name || ''"></td>
+                            <td class="px-2 py-1.5 text-white font-medium text-[11px] max-w-[180px] truncate" x-text="biz.name || ''"></td>
                             <td class="px-2 py-1.5 text-gray-300 text-[10px]" x-text="biz.document_number || ''"></td>
                             <td class="px-2 py-1.5">
-                                <span :class="(biz.status || '').toLowerCase().includes('active') ? 'text-green-400' : 'text-red-400'"
+                                <span :class="(biz.status || '').toLowerCase().includes('active') && !(biz.status || '').toLowerCase().includes('inact') ? 'text-green-400' : 'text-red-400'"
                                     class="text-[10px]" x-text="biz.status || ''"></span>
                             </td>
+                            <td class="px-2 py-1.5 text-gray-300 text-[10px]" x-text="biz.state || 'FL'"></td>
                             <td class="px-2 py-1.5 text-gray-300 text-[10px]" x-text="biz.filing_date || ''"></td>
-                            <td class="px-2 py-1.5 text-gray-400 text-[10px] max-w-[180px] truncate" x-text="biz.principal_address || ''"></td>
+                            <td class="px-2 py-1.5 text-gray-400 text-[10px] max-w-[140px] truncate" x-text="biz.principal_address || ''"></td>
                             <td class="px-2 py-1.5">
                                 <span class="px-1.5 py-0.5 bg-pink-500/10 text-pink-400 text-[9px] rounded-full" x-text="biz.category || ''"></span>
                             </td>
                             <td class="px-2 py-1.5">
                                 <template x-if="biz.detail_url">
-                                    <a :href="biz.detail_url" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-[10px]">
+                                    <a :href="biz.detail_url" target="_blank" class="text-blue-400 hover:text-blue-300 text-[10px]">
                                         <i class="fas fa-external-link-alt"></i>
                                     </a>
                                 </template>
@@ -201,24 +249,135 @@
 </div>
 
 <script>
-function floridaScraper() {
+function sosScraper() {
     return {
+        // State selection
+        availableStates: [
+            {code: 'FL', name: 'Florida', active: true},
+            {code: 'CA', name: 'California', active: false},
+            {code: 'TX', name: 'Texas', active: false},
+            {code: 'NY', name: 'New York', active: false},
+            {code: 'PA', name: 'Pennsylvania', active: false},
+            {code: 'IL', name: 'Illinois', active: false},
+            {code: 'OH', name: 'Ohio', active: false},
+            {code: 'GA', name: 'Georgia', active: false},
+            {code: 'NC', name: 'North Carolina', active: false},
+            {code: 'MI', name: 'Michigan', active: false},
+            {code: 'NJ', name: 'New Jersey', active: false},
+            {code: 'VA', name: 'Virginia', active: false},
+            {code: 'WA', name: 'Washington', active: false},
+            {code: 'AZ', name: 'Arizona', active: false},
+            {code: 'MA', name: 'Massachusetts', active: false},
+            {code: 'TN', name: 'Tennessee', active: false},
+            {code: 'IN', name: 'Indiana', active: false},
+            {code: 'MO', name: 'Missouri', active: false},
+            {code: 'MD', name: 'Maryland', active: false},
+            {code: 'WI', name: 'Wisconsin', active: false},
+            {code: 'CO', name: 'Colorado', active: false},
+            {code: 'MN', name: 'Minnesota', active: false},
+            {code: 'SC', name: 'South Carolina', active: false},
+            {code: 'AL', name: 'Alabama', active: false},
+            {code: 'LA', name: 'Louisiana', active: false},
+            {code: 'KY', name: 'Kentucky', active: false},
+            {code: 'OR', name: 'Oregon', active: false},
+            {code: 'OK', name: 'Oklahoma', active: false},
+            {code: 'CT', name: 'Connecticut', active: false},
+            {code: 'UT', name: 'Utah', active: false},
+            {code: 'IA', name: 'Iowa', active: false},
+            {code: 'NV', name: 'Nevada', active: false},
+            {code: 'AR', name: 'Arkansas', active: false},
+            {code: 'MS', name: 'Mississippi', active: false},
+            {code: 'KS', name: 'Kansas', active: false},
+            {code: 'NM', name: 'New Mexico', active: false},
+            {code: 'NE', name: 'Nebraska', active: false},
+            {code: 'ID', name: 'Idaho', active: false},
+            {code: 'WV', name: 'West Virginia', active: false},
+            {code: 'HI', name: 'Hawaii', active: false},
+            {code: 'NH', name: 'New Hampshire', active: false},
+            {code: 'ME', name: 'Maine', active: false},
+            {code: 'MT', name: 'Montana', active: false},
+            {code: 'RI', name: 'Rhode Island', active: false},
+            {code: 'DE', name: 'Delaware', active: false},
+            {code: 'SD', name: 'South Dakota', active: false},
+            {code: 'ND', name: 'North Dakota', active: false},
+            {code: 'AK', name: 'Alaska', active: false},
+            {code: 'VT', name: 'Vermont', active: false},
+            {code: 'WY', name: 'Wyoming', active: false}
+        ],
+        selectedState: 'FL',
+        
+        // Keywords
         allKeywords: {{ keywords | tojson }},
         selectedKeywords: new Set({{ keywords[:3] | tojson }}),
         customKeyword: '',
         maxResults: 20,
+        
+        // Scraping state
         isRunning: false,
         isLoading: false,
         scrapeStatus: '',
         statusMessage: '',
         autoScroll: true,
+        showLog: true,
         businesses: [],
         logCursor: 0,
         pollTimer: null,
+        
+        // Filters
+        filterStatus: '',
+        filterCategory: '',
+        filterState: '',
 
         init() {
-            // Load persisted data on page load
             this.loadPersistedData();
+        },
+
+        // Computed: filtered businesses based on filters
+        get filteredBusinesses() {
+            return this.businesses.filter(biz => {
+                // Status filter
+                if (this.filterStatus) {
+                    const status = (biz.status || '').toLowerCase();
+                    if (this.filterStatus === 'active') {
+                        if (!status.includes('active') || status.includes('inact')) return false;
+                    } else if (this.filterStatus === 'inactive') {
+                        if (!status.includes('inact') && !status.includes('dissolved') && !status.includes('cancelled')) return false;
+                    }
+                }
+                // Category filter
+                if (this.filterCategory && (biz.category || '') !== this.filterCategory) {
+                    return false;
+                }
+                // State filter
+                if (this.filterState && (biz.state || 'FL') !== this.filterState) {
+                    return false;
+                }
+                return true;
+            });
+        },
+
+        // Computed: unique categories from businesses
+        get uniqueCategories() {
+            const cats = new Set();
+            this.businesses.forEach(biz => {
+                if (biz.category) cats.add(biz.category);
+            });
+            return Array.from(cats).sort();
+        },
+
+        // Computed: unique states from businesses
+        get uniqueStates() {
+            const states = new Set();
+            this.businesses.forEach(biz => {
+                states.add(biz.state || 'FL');
+            });
+            return Array.from(states).sort();
+        },
+
+        clearFilters() {
+            this.filterStatus = '';
+            this.filterCategory = '';
+            this.filterState = '';
         },
 
         async loadPersistedData() {
@@ -242,7 +401,6 @@ function floridaScraper() {
             } else {
                 this.selectedKeywords.add(kw);
             }
-            // Force reactivity
             this.selectedKeywords = new Set(this.selectedKeywords);
         },
 
@@ -292,10 +450,17 @@ function floridaScraper() {
         async startScrape() {
             const keywords = Array.from(this.selectedKeywords);
             if (!keywords.length) return;
+            
+            // Check if selected state is active
+            const stateInfo = this.availableStates.find(s => s.code === this.selectedState);
+            if (!stateInfo || !stateInfo.active) {
+                alert(`${stateInfo ? stateInfo.name : this.selectedState} scraper is coming soon!`);
+                return;
+            }
 
             this.isRunning = true;
             this.scrapeStatus = 'running';
-            this.statusMessage = 'Scraping in progress...';
+            this.statusMessage = `Scraping ${stateInfo.name}...`;
             document.getElementById('logBox').innerHTML = '';
             this.logCursor = 0;
 
@@ -303,7 +468,11 @@ function floridaScraper() {
                 const resp = await fetch('{{ url_for("florida_api_scrape") }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ keywords, max_per_category: this.maxResults })
+                    body: JSON.stringify({ 
+                        keywords, 
+                        max_per_category: this.maxResults,
+                        state: this.selectedState 
+                    })
                 });
                 const data = await resp.json();
                 if (data.status === 'started' || data.status === 'running') {
@@ -353,23 +522,20 @@ function floridaScraper() {
 
         async loadResults() {
             try {
-                // First try to get current session results
                 const resp = await fetch('{{ url_for("florida_api_results") }}');
                 const data = await resp.json();
                 if (data && data.length > 0) {
                     this.businesses = data;
                 } else {
-                    // Fallback to persisted data
                     await this.loadPersistedData();
                 }
             } catch (_) {
-                // Fallback to persisted data
                 await this.loadPersistedData();
             }
         },
 
         async deleteAllData() {
-            if (!confirm('Are you sure you want to delete ALL Florida scraper data? This cannot be undone.')) {
+            if (!confirm('Are you sure you want to delete ALL scraper data? This cannot be undone.')) {
                 return;
             }
             
@@ -388,6 +554,58 @@ function floridaScraper() {
             } catch (e) {
                 alert('Failed to delete: ' + e.message);
             }
+        },
+
+        // Export filtered data
+        exportFiltered(format) {
+            const filtered = this.filteredBusinesses;
+            if (filtered.length === 0) {
+                alert('No data to export with current filters.');
+                return;
+            }
+            
+            if (format === 'csv') {
+                this.downloadCSV(filtered);
+            } else if (format === 'json') {
+                this.downloadJSON(filtered);
+            }
+        },
+
+        downloadCSV(data) {
+            const headers = ['Name', 'Document Number', 'Status', 'State', 'Filing Date', 'Principal Address', 'Category', 'Detail URL'];
+            const rows = data.map(biz => [
+                (biz.name || '').replace(/"/g, '""'),
+                biz.document_number || '',
+                biz.status || '',
+                biz.state || 'FL',
+                biz.filing_date || '',
+                (biz.principal_address || '').replace(/"/g, '""'),
+                biz.category || '',
+                biz.detail_url || ''
+            ]);
+            
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sos_leads_filtered_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        },
+
+        downloadJSON(data) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sos_leads_filtered_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
     };
 }

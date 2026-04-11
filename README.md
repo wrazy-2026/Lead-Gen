@@ -44,6 +44,7 @@
 ### 🔍 Data Scraping (All 50 US States)
 - **SEC EDGAR Integration** - Real-time SEC filings (10-K, 10-Q, S-1, 8-K)
 - **All 50 State SOS Sites** - Secretary of State business registrations nationwide
+- **SOS Business Scraper** - Interactive scraper with filters (Status, Category, State), filtered exports
 - **OpenCorporates API** - Additional business data from multiple jurisdictions
 - **Parallel Scraping** - Concurrent execution for faster data collection
 

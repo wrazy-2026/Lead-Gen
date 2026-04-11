@@ -1,5 +1,37 @@
 # Changelog / History
 
+## April 12, 2026 (Latest)
+
+### Multi-State SOS Scraper with Filters
+
+**Major Feature: Expanded to All 50 US States**
+- Renamed "Florida Sunbiz Scraper" to "SOS Business Scraper"
+- Added state dropdown selector with all 50 US states (FL active, others coming soon)
+- UI now shows state count badge and supports future state scrapers
+
+**Filter System:**
+- Added Status filter (Active/Inactive) - filters by business status
+- Added Category filter - dynamically populated from scraped data
+- Added State filter - filter by state when multiple states are scraped
+- "Clear Filters" button to reset all filters
+- Filtered export - CSV and JSON export only the filtered data
+
+**UI Improvements:**
+- Collapsible log panel with toggle button
+- Added State column to results table
+- Export buttons now export filtered data instead of all data
+- Client-side CSV/JSON generation for filtered exports
+
+**Files Modified:**
+- `templates/florida_scraper.html` - Complete rewrite of JavaScript to `sosScraper()` with:
+  - `availableStates` array for all 50 states
+  - `filteredBusinesses` computed property
+  - Filter state variables (`filterStatus`, `filterCategory`, `filterState`)
+  - `exportFiltered()` function with client-side CSV/JSON generation
+  - `uniqueCategories` and `uniqueStates` computed properties
+
+---
+
 ## April 12, 2026
 
 ### Florida Sunbiz Scraper Improvements
