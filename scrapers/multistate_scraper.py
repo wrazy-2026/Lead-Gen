@@ -190,17 +190,19 @@ STATE_CONFIGS: Dict[str, StateConfig] = {
     "IL": StateConfig(
         code="IL",
         name="Illinois",
-        search_url="https://apps.ilsos.gov/corporatellc/",
-        search_input_selector="#corporateName",
-        search_button_selector="input[type='submit']",
+        search_url="https://apps.ilsos.gov/businessentitysearch/",
+        search_input_selector="#searchValue",
+        search_button_selector="#btnSearch",
         results_table_selector="table",
         row_selector="table tbody tr",
-        name_selector="td:nth-child(1) a",
+        name_selector="td:nth-child(1)",
         doc_number_selector="td:nth-child(2)",
-        status_selector="td:nth-child(3)",
-        date_selector="td:nth-child(4)",
+        status_selector="td:nth-child(4)",
+        date_selector="td:nth-child(3)",
         detail_link_selector="td:nth-child(1) a",
-        wait_after_search=2500,
+        wait_after_search=3000,
+        requires_captcha=True,
+        extra={"search_radio": "#name", "has_recaptcha": True}
     ),
     "NJ": StateConfig(
         code="NJ",
@@ -1417,6 +1419,99 @@ class TexasScraper(MultiStateScraper):
         return results
 
 
+class IllinoisScraper(MultiStateScraper):
+    """
+    Illinois Secretary of State Business Entity Search scraper.
+    
+    Note: Illinois has reCAPTCHA Enterprise protection. This scraper attempts
+    stealth mode but may fail if CAPTCHA is triggered.
+    """
+    
+    def __init__(self, **kwargs):
+        super().__init__(states=["IL"], **kwargs)
+    
+    async def _search_keyword(self, page: Page, config: StateConfig, keyword: str, max_results: int) -> List[Dict]:
+        """Illinois-specific search handling with radio button selection."""
+        results = []
+        
+        try:
+            # Navigate to Illinois SOS Business Entity Search
+            await page.goto("https://apps.ilsos.gov/businessentitysearch/", wait_until="networkidle")
+            await asyncio.sleep(2)
+            
+            # Click the "Entity Name" radio button first (required before search)
+            name_radio = await page.query_selector("#name")
+            if name_radio:
+                await name_radio.click()
+                await asyncio.sleep(0.5)
+            
+            # Fill search input
+            search_input = await page.query_selector("#searchValue")
+            if search_input:
+                await search_input.fill(keyword)
+            
+            # Click search button
+            search_btn = await page.query_selector("#btnSearch")
+            if search_btn:
+                await search_btn.click()
+            
+            await asyncio.sleep(3)
+            
+            # Check for CAPTCHA
+            captcha_frame = await page.query_selector("iframe[src*='recaptcha']")
+            if captcha_frame:
+                self._log(f"  WARNING: reCAPTCHA detected for IL. Results may be limited.")
+                # Without 2Captcha integration, we cannot solve it
+                return results
+            
+            # Parse results table
+            rows = await page.query_selector_all("table tbody tr")
+            
+            for row in rows[:max_results]:
+                try:
+                    cells = await row.query_selector_all("td")
+                    if len(cells) < 2:
+                        continue
+                    
+                    # Illinois columns: Name, File Number, Entity Type, Status
+                    name = (await cells[0].inner_text()).strip()
+                    doc_number = (await cells[1].inner_text()).strip() if len(cells) > 1 else ""
+                    entity_type = (await cells[2].inner_text()).strip() if len(cells) > 2 else ""
+                    status = (await cells[3].inner_text()).strip() if len(cells) > 3 else "Active"
+                    
+                    # Get detail link if available
+                    link_elem = await cells[0].query_selector("a")
+                    detail_url = ""
+                    if link_elem:
+                        href = await link_elem.get_attribute("href")
+                        if href:
+                            detail_url = f"https://apps.ilsos.gov{href}" if href.startswith("/") else href
+                    
+                    business = {
+                        "name": name,
+                        "document_number": doc_number,
+                        "status": status,
+                        "filing_date": "",
+                        "state": "IL",
+                        "category": keyword,
+                        "entity_type": entity_type,
+                        "detail_url": detail_url,
+                        "scraped_at": datetime.now().isoformat(),
+                    }
+                    
+                    results.append(business)
+                    
+                except Exception:
+                    continue
+            
+            self._log(f"  Found {len(results)} businesses for '{keyword}'")
+            
+        except Exception as e:
+            self._log(f"  ERROR: {str(e)}")
+        
+        return results
+
+
 # ============================================================================
 # Factory function to get the right scraper for a state
 # ============================================================================
@@ -1442,6 +1537,8 @@ def get_scraper_for_states(states: List[str], **kwargs) -> MultiStateScraper:
             return CaliforniaScraper(**kwargs)
         elif state == "TX":
             return TexasScraper(**kwargs)
+        elif state == "IL":
+            return IllinoisScraper(**kwargs)
     
     return MultiStateScraper(states=states, **kwargs)
 

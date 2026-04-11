@@ -2,6 +2,21 @@
 
 ## April 12, 2026 (Latest Update)
 
+### Illinois Scraper Fixed
+
+Fixed Illinois Secretary of State Business Entity Search scraper:
+- Updated URL from `/corporatellc/` to `/businessentitysearch/`
+- Fixed selectors: `#searchValue` for input, `#btnSearch` for submit
+- Added `IllinoisScraper` class that handles radio button selection
+- Note: Illinois has reCAPTCHA Enterprise - may fail if CAPTCHA is triggered
+
+**Files Updated:**
+- `scrapers/multistate_scraper.py` - Fixed IL StateConfig and added IllinoisScraper class
+
+---
+
+## April 12, 2026
+
 ### Standard HTML State Scrapers - 29 States Active
 
 Added scrapers for all Standard HTML states (no JavaScript required):
