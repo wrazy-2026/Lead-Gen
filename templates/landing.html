@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeadGen Pro - Discover New Business Leads</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pink: {
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                        },
+                        fuchsia: {
+                            400: '#e879f9',
+                            500: '#d946ef',
+                            600: '#c026d3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Particles.js -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Alpine.js for interactions -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Particle container */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            /* Changed from auto to none to prevent blocking clicks */
+        }
+
+        /* Lighting effect gradient blobs */
+        .lighting-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            z-index: -1;
+            animation: blobFloat 8s ease-in-out infinite;
+        }
+
+        .lighting-blob-pink {
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.8) 0%, rgba(236, 72, 153, 0) 70%);
+            width: 600px;
+            height: 600px;
+            top: -100px;
+            left: -100px;
+        }
+
+        .lighting-blob-blue {
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.7) 0%, rgba(59, 130, 246, 0) 70%);
+            width: 500px;
+            height: 500px;
+            top: 30%;
+            right: -100px;
+            animation-delay: -4s;
+        }
+
+        .lighting-blob-purple {
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0) 70%);
+            width: 450px;
+            height: 450px;
+            bottom: 10%;
+            left: 20%;
+            animation-delay: -2s;
+        }
+
+        .lighting-blob-cyan {
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.5) 0%, rgba(6, 182, 212, 0) 70%);
+            width: 400px;
+            height: 400px;
+            top: 50%;
+            left: 50%;
+            animation-delay: -6s;
+        }
+
+        @keyframes blobFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(30px, -30px) scale(1.1);
+            }
+
+            50% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+
+            75% {
+                transform: translate(20px, 10px) scale(1.05);
+            }
+        }
+
+        /* Pinkish gradient text */
+        .gradient-text-pink {
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Animated gradient background - transparent for particles */
+        .hero-gradient {
+            background: transparent;
+        }
+
+        /* Glow effect */
+        .glow-pink {
+            box-shadow: 0 0 60px rgba(236, 72, 153, 0.3),
+                0 0 100px rgba(217, 70, 239, 0.2);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 40px rgba(236, 72, 153, 0.5),
+                0 0 80px rgba(217, 70, 239, 0.3);
+        }
+
+        /* Glass morphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(236, 72, 153, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Button animations */
+        .btn-glow {
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%);
+            background-size: 200% 200%;
+            animation: btnGradient 3s ease infinite;
+            transition: all 0.3s ease;
+        }
+
+        .btn-glow:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 40px rgba(236, 72, 153, 0.4);
+        }
+
+        /* Glowing Google Auth Button */
+        .google-glow-btn {
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%);
+            background-size: 200% 200%;
+            animation: btnGradient 3s ease infinite;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.5),
+                0 0 40px rgba(217, 70, 239, 0.3),
+                0 0 60px rgba(139, 92, 246, 0.2);
+            position: relative;
+        }
+
+        .google-glow-btn::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ec4899, #d946ef, #8b5cf6);
+            z-index: -1;
+            animation: rotateGlow 3s linear infinite;
+            opacity: 0.7;
+        }
+
+        .google-glow-btn::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(217, 70, 239, 0.2), rgba(139, 92, 246, 0.1));
+            z-index: -2;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes rotateGlow {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes btnGradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Floating animation */
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Pulse ring */
+        .pulse-ring {
+            animation: pulseRing 2s ease-out infinite;
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Feature cards gradient border */
+        .gradient-border {
+            position: relative;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(139, 92, 246, 0.1));
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            padding: 1px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            /* Added to allow clicks to pass through to children */
+            z-index: -1;
+            /* Ensure it stays behind the content */
+        }
+
+        /* Stats counter */
+        .stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(#ec4899, #8b5cf6);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="bg-[#0a0a15] text-white overflow-x-hidden">
+    <!-- Lighting Effect Gradient Blobs -->
+    <div class="lighting-blob lighting-blob-pink"></div>
+    <div class="lighting-blob lighting-blob-blue"></div>
+    <div class="lighting-blob lighting-blob-purple"></div>
+    <div class="lighting-blob lighting-blob-cyan"></div>
+
+    <!-- Particles Background -->
+    <div id="particles-js"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl btn-glow flex items-center justify-center">
+                        <i class="fas fa-rocket text-white"></i>
+                    </div>
+                    <span class="text-xl font-bold hero-title">LeadGen<span class="gradient-text-pink">Pro</span></span>
+                </div>
+
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="text-gray-300 hover:text-white transition-colors">Features</a>
+                    <a href="#how-it-works" class="text-gray-300 hover:text-white transition-colors">How It Works</a>
+                    <a href="#pricing" class="text-gray-300 hover:text-white transition-colors">Pricing</a>
+                </div>
+
+                <!-- Glowing Google Auth Icon -->
+                {% if current_user.is_authenticated %}
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                    <button @click="open = !open"
+                        class="google-glow-btn flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-pink-400/50 hover:border-pink-400 transition-all duration-300">
+                        {% if current_user.picture %}
+                        <img src="{{ current_user.picture }}" alt="{{ current_user.name }}"
+                            class="w-full h-full object-cover">
+                        {% else %}
+                        <span class="text-white font-bold text-lg">{{ current_user.name[0] }}</span>
+                        {% endif %}
+                    </button>
+                    <!-- Dropdown -->
+                    <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute right-0 mt-3 w-56 glass rounded-xl border border-white/10 py-2 shadow-2xl">
+                        <div class="px-4 py-3 border-b border-white/10">
+                            <p class="text-sm font-semibold text-white">{{ current_user.name }}</p>
+                            <p class="text-xs text-gray-400 truncate">{{ current_user.email }}</p>
+                        </div>
+                        <a href="{{ url_for('client_dashboard') }}"
+                            class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+                            <i class="fas fa-tachometer-alt mr-3 text-pink-400"></i>Dashboard
+                        </a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin_dashboard') }}"
+                            class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+                            <i class="fas fa-shield-alt mr-3 text-purple-400"></i>Admin Panel
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}"
+                            class="flex items-center px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                            <i class="fas fa-sign-out-alt mr-3"></i>Sign Out
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <a href="{{ url_for('auth_login') }}" id="google-auth-btn"
+                    class="google-glow-btn w-12 h-12 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform duration-300 border-none bg-transparent">
+                    <i class="fab fa-google text-xl text-white"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- Hero Section -->
+    <section class="hero-gradient min-h-screen relative flex items-center justify-center pt-20">
+        <div class="max-w-7xl mx-auto px-6 py-20 relative z-10">
+            <div class="text-center">
+                <!-- Badge -->
+                <div class="inline-flex items-center space-x-2 glass rounded-full px-4 py-2 mb-8">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                    </span>
+                    <span class="text-sm text-gray-300">Now fetching 100+ leads per session</span>
+                </div>
+
+                <!-- Main Headline -->
+                <h1 class="hero-title text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight">
+                    <span class="text-white">Discover</span><br>
+                    <span class="gradient-text-pink glow-text">New Business</span><br>
+                    <span class="text-white">Leads</span>
+                </h1>
+
+                <!-- Subheadline -->
+                <p class="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 leading-relaxed">
+                    Track freshly registered businesses from <span class="text-pink-400">official government data</span>
+                    and
+                    <span class="text-fuchsia-400">state registries</span>. Enrich with contact data.
+                    Export to Google Sheets.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div
+                    class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
+                    <a href="{{ url_for('auth_login') }}" id="hero-google-btn"
+                        class="btn-glow px-10 py-4 rounded-2xl text-lg font-bold flex items-center space-x-3 glow-pink border-none cursor-pointer">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="currentColor"
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="currentColor"
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path fill="currentColor"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        <span>Get Started Free</span>
+                    </a>
+
+                    <a href="#how-it-works"
+                        class="glass px-8 py-4 rounded-2xl text-lg font-semibold flex items-center space-x-2 hover:bg-white/10 transition-all">
+                        <i class="fas fa-play-circle text-pink-400"></i>
+                        <span>See How It Works</span>
+                    </a>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                    <div class="glass-card rounded-2xl p-6 text-center">
+                        <p class="stat-number text-4xl gradient-text-pink">100+</p>
+                        <p class="text-gray-400 text-sm mt-1">Leads per Fetch</p>
+                    </div>
+                    <div class="glass-card rounded-2xl p-6 text-center">
+                        <p class="stat-number text-4xl gradient-text-pink">50</p>
+                        <p class="text-gray-400 text-sm mt-1">US States</p>
+                    </div>
+                    <div class="glass-card rounded-2xl p-6 text-center">
+                        <p class="stat-number text-4xl gradient-text-pink">4+</p>
+                        <p class="text-gray-400 text-sm mt-1">Official Data Sources</p>
+                    </div>
+                    <div class="glass-card rounded-2xl p-6 text-center">
+                        <p class="stat-number text-4xl gradient-text-pink">150+</p>
+                        <p class="text-gray-400 text-sm mt-1">Industry Categories</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 float">
+            <div class="w-6 h-10 border-2 border-pink-500/50 rounded-full flex justify-center">
+                <div class="w-1 h-3 bg-pink-500 rounded-full mt-2 animate-bounce"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-32 relative z-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <span class="text-pink-500 text-sm font-semibold tracking-wider uppercase">Features</span>
+                <h2 class="hero-title text-4xl md:text-5xl font-bold mt-4 mb-6">
+                    Everything You Need to<br>
+                    <span class="gradient-text-pink">Generate Leads</span>
+                </h2>
+                <p class="text-gray-400 text-xl max-w-2xl mx-auto">
+                    Powerful tools to discover, enrich, and export business leads at scale.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass-card rounded-3xl p-8 gradient-border">
+                    <div class="w-14 h-14 btn-glow rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-database text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Official Business Data</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Real-time access to primary business registrations, incorporation filings, and updated company
+                        profiles with industry classification.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass-card rounded-3xl p-8 gradient-border">
+                    <div class="w-14 h-14 btn-glow rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-map-marked-alt text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">All 50 States</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Scrape business registrations from Florida Sunbiz, California, Delaware, and all other US
+                        states.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass-card rounded-3xl p-8 gradient-border">
+                    <div class="w-14 h-14 btn-glow rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-user-tie text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Contact Discovery</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Automated tools to find owner names, professional email addresses, and verified contact
+                        information for direct outreach.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="glass-card rounded-3xl p-8 gradient-border">
+                    <div class="w-14 h-14 btn-glow rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fab fa-google text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Google Sheets Export</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        One-click export to Google Sheets with Service Account authentication. Auto-export after
+                        enrichment.
+                    </p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="glass-card rounded-3xl p-8 gradient-border">
+                    <div class="w-14 h-14 btn-glow rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-industry text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Industry Classification</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Automatic SIC code classification with 150+ industry categories for targeted outreach campaigns.
+                    </p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="glass-card rounded-3xl p-8 gradient-border">
+                    <div class="w-14 h-14 btn-glow rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-shield-alt text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Secure & Private</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Google OAuth 2.0 authentication with role-based access control. Your data stays secure.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-32 relative">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-pink-500/5 to-transparent"></div>
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+            <div class="text-center mb-20">
+                <span class="text-pink-500 text-sm font-semibold tracking-wider uppercase">How It Works</span>
+                <h2 class="hero-title text-4xl md:text-5xl font-bold mt-4 mb-6">
+                    Three Simple Steps to<br>
+                    <span class="gradient-text-pink">Quality Leads</span>
+                </h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-12">
+                <!-- Step 1 -->
+                <div class="text-center relative">
+                    <div class="w-20 h-20 mx-auto mb-8 relative">
+                        <div class="absolute inset-0 btn-glow rounded-full pulse-ring"></div>
+                        <div class="w-20 h-20 btn-glow rounded-full flex items-center justify-center relative">
+                            <span class="text-3xl font-bold">1</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Fetch Leads</h3>
+                    <p class="text-gray-400">
+                        Click to scrape SEC EDGAR, OpenCorporates, and state databases. Get 100+ fresh business
+                        registrations instantly.
+                    </p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="text-center relative">
+                    <div class="w-20 h-20 mx-auto mb-8 relative">
+                        <div class="absolute inset-0 btn-glow rounded-full pulse-ring" style="animation-delay: 0.5s;">
+                        </div>
+                        <div class="w-20 h-20 btn-glow rounded-full flex items-center justify-center relative">
+                            <span class="text-3xl font-bold">2</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Find Owners</h3>
+                    <p class="text-gray-400">
+                        Use System Search to find official websites
+                    </p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="text-center relative">
+                    <div class="w-20 h-20 mx-auto mb-8 relative">
+                        <div class="absolute inset-0 btn-glow rounded-full pulse-ring" style="animation-delay: 1s;">
+                        </div>
+                        <div class="w-20 h-20 btn-glow rounded-full flex items-center justify-center relative">
+                            <span class="text-3xl font-bold">3</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Enrich & Export</h3>
+                    <p class="text-gray-400">
+                        Premium data lookup and contact discovery tools.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="pricing" class="py-32 relative z-10">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <div class="glass-card rounded-[3rem] p-12 md:p-16 gradient-border glow-pink">
+                <h2 class="hero-title text-4xl md:text-5xl font-bold mb-8">
+                    Ready to Find<br>
+                    <span class="gradient-text-pink">New Leads?</span>
+                </h2>
+
+                <div class="flex flex-col space-y-4 max-w-sm mx-auto">
+                    <a href="{{ url_for('auth_login') }}"
+                        class="btn-glow py-4 rounded-2xl text-lg font-bold shadow-lg block">
+                        Get Started Now
+                    </a>
+                    <a href="{{ url_for('auth_login') }}"
+                        class="bg-[#1a1a4e] hover:bg-[#25256e] border border-white/10 py-4 rounded-2xl text-lg font-medium transition-all flex items-center justify-center space-x-3">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        </svg>
+                        <span>Continue with Google</span>
+                    </a>
+                </div>
+
+                <p class="text-gray-500 text-sm mt-6">
+                    <i class="fas fa-lock mr-2"></i>
+                    Secure authentication via Firebase. No credit card required.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-16 border-t border-white/10 relative z-10">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12">
+                <div>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 rounded-xl btn-glow flex items-center justify-center">
+                            <i class="fas fa-rocket text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold hero-title">LeadGen<span
+                                class="gradient-text-pink">Pro</span></span>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        Discover and track newly registered businesses from Federal registry filings and state
+                        databases.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Features</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><i class="fas fa-check mr-2 text-pink-500"></i>Official Federal Registry Data</li>
+                        <li><i class="fas fa-check mr-2 text-pink-500"></i>State Registrations</li>
+                        <li><i class="fas fa-check mr-2 text-pink-500"></i>Contact Enrichment</li>
+                        <li><i class="fas fa-check mr-2 text-pink-500"></i>Google Sheets Export</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Data Sources</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li>Official Federal Registry</li>
+                        <li>Florida Sunbiz</li>
+                        <li>OpenCorporates</li>
+                        <li>50 State Databases</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Security</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><i class="fas fa-lock mr-2"></i>Google OAuth 2.0</li>
+                        <li><i class="fas fa-database mr-2"></i>Encrypted Storage</li>
+                        <li><i class="fas fa-user-shield mr-2"></i>Role-based Access</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div
+                class="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-gray-500 text-sm">
+                <p>&copy; {{ current_year }} LeadGen Pro. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="{{ url_for('privacy') }}" class="hover:text-pink-400 transition-colors">Privacy Policy</a>
+                    <a href="{{ url_for('terms') }}" class="hover:text-pink-400 transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Particles.js Configuration - Interactive Network Effect -->
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: {
+                    value: 120,
+                    density: { enable: true, value_area: 900 }
+                },
+                color: { value: ['#ec4899', '#d946ef', '#8b5cf6', '#06b6d4', '#3b82f6'] },
+                shape: {
+                    type: ['circle', 'triangle'],
+                    stroke: { width: 0, color: '#000000' }
+                },
+                opacity: {
+                    value: 0.6,
+                    random: true,
+                    anim: { enable: true, speed: 1.5, opacity_min: 0.1, sync: false }
+                },
+                size: {
+                    value: 4,
+                    random: true,
+                    anim: { enable: true, speed: 3, size_min: 0.5, sync: false }
+                },
+                line_linked: {
+                    enable: true,
+                    distance: 180,
+                    color: '#ec4899',
+                    opacity: 0.3,
+                    width: 1.5,
+                    shadow: { enable: true, blur: 5, color: '#ec4899' }
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: 'none',
+                    random: true,
+                    straight: false,
+                    out_mode: 'bounce',
+                    bounce: true,
+                    attract: { enable: true, rotateX: 800, rotateY: 1500 }
+                }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: {
+                    onhover: { enable: true, mode: ['grab', 'bubble'] },
+                    onclick: { enable: true, mode: 'push' },
+                    resize: true
+                },
+                modes: {
+                    grab: {
+                        distance: 200,
+                        line_linked: { opacity: 0.8 }
+                    },
+                    bubble: {
+                        distance: 250,
+                        size: 8,
+                        duration: 2,
+                        opacity: 0.8,
+                        speed: 3
+                    },
+                    push: { particles_nb: 6 },
+                    repulse: { distance: 150, duration: 0.4 }
+                }
+            },
+            retina_detect: true
+        });
+    </script>
+    <!-- No inline script needed, all auth redirects to /auth/login -->
+</body>
+
+</html>

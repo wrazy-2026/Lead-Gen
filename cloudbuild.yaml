@@ -1,0 +1,53 @@
+# Cloud Build configuration for Google Cloud Run (Firestore version)
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/leadgen-dashboard', '.']
+  
+  # Push to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/leadgen-dashboard']
+  
+  # Deploy to Cloud Run (Using Firestore, removing Cloud SQL to fix deployment errors)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'leadgen-dashboard'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/leadgen-dashboard'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--clear-cloudsql-instances'
+      - '--timeout'
+      - '300'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '1'
+      - '--set-env-vars'
+      - 'GOOGLE_CLIENT_ID=${_GOOGLE_CLIENT_ID},GOOGLE_CLIENT_SECRET=${_GOOGLE_CLIENT_SECRET},SECRET_KEY=${_SECRET_KEY},ADMIN_EMAIL=${_ADMIN_EMAIL},SERPER_API_KEY=${_SERPER_API_KEY},APIFY_TOKEN=${_APIFY_TOKEN},GEMINI_API_KEY=${_GEMINI_API_KEY},OPENAI_API_KEY=${_OPENAI_API_KEY},GROQ_API_KEY=${_GROQ_API_KEY},FIREBASE_PROJECT_ID=${_FIREBASE_PROJECT_ID},FIRESTORE_DATABASE_ID=leadgen'
+
+substitutions:
+  _GOOGLE_CLIENT_ID: 'REPLACE_ME'
+  _GOOGLE_CLIENT_SECRET: 'REPLACE_ME'
+  _SECRET_KEY: 'REPLACE_ME'
+  _ADMIN_EMAIL: 'REPLACE_ME'
+  _SERPER_API_KEY: 'REPLACE_ME'
+  _APIFY_TOKEN: 'REPLACE_ME'
+  _GEMINI_API_KEY: 'REPLACE_ME'
+  _OPENAI_API_KEY: 'REPLACE_ME'
+  _GROQ_API_KEY: 'REPLACE_ME'
+  _FIREBASE_PROJECT_ID: 'lively-paratext-487716-r8'
+
+images:
+  - 'gcr.io/$PROJECT_ID/leadgen-dashboard'
+
+timeout: '1200s'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - LeadGen Pro{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Admin Header -->
+    <div class="bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-600 rounded-2xl p-8 text-white glow-pink">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-6">
+                <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+                    <i class="fas fa-shield-alt text-4xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold">Admin Control Panel</h1>
+                    <p class="text-purple-200 mt-1">Manage users, system settings, and monitor activity</p>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span
+                            class="inline-flex items-center gap-1 px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">
+                            <i class="fas fa-crown text-yellow-300 mr-1"></i> Administrator
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                {% if current_user.picture %}
+                <img src="{{ current_user.picture }}" alt="Admin"
+                    class="w-16 h-16 rounded-full border-4 border-white/30 shadow-xl">
+                {% endif %}
+                <div>
+                    <p class="font-bold text-lg">{{ current_user.name }}</p>
+                    <p class="text-sm text-purple-200">{{ current_user.email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-[#161638] rounded-xl border border-white/10 p-6 card-glow">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-blue-500/20">
+                    <i class="fas fa-users text-blue-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-400">Total Users</p>
+                    <p class="text-2xl font-bold text-white">{{ users|length }}</p>
+                </div>
+            </div>
+            <div class="mt-3 flex gap-2">
+                <span class="text-xs text-purple-400">
+                    <i class="fas fa-crown mr-1"></i>{{ users|selectattr('is_admin')|list|length }} admin{% if
+                    users|selectattr('is_admin')|list|length != 1 %}s{% endif %}
+                </span>
+                <span class="text-gray-600">·</span>
+                <span class="text-xs text-green-400">
+                    <i class="fas fa-user mr-1"></i>{{ users|rejectattr('is_admin')|list|length }} client{% if
+                    users|rejectattr('is_admin')|list|length != 1 %}s{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="bg-[#161638] rounded-xl border border-white/10 p-6 card-glow">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-green-500/20">
+                    <i class="fas fa-database text-green-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-400">Total Leads</p>
+                    <p class="text-2xl font-bold text-white">{{ stats.total_leads }}</p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <a href="{{ url_for('leads') }}" class="text-xs text-pink-400 hover:text-pink-300">Browse all leads
+                    →</a>
+            </div>
+        </div>
+
+        <div class="bg-[#161638] rounded-xl border border-white/10 p-6 card-glow">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-purple-500/20">
+                    <i class="fas fa-calendar-day text-purple-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-400">New Today</p>
+                    <p class="text-2xl font-bold text-white">{{ stats.new_today }}</p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="text-xs text-gray-500">Added in the last 24 hours</span>
+            </div>
+        </div>
+
+        <div class="bg-[#161638] rounded-xl border border-white/10 p-6 card-glow">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-orange-500/20">
+                    <i class="fas fa-clock text-orange-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-400">Last Fetch</p>
+                    <p class="text-lg font-semibold text-white">{{ stats.last_fetch }}</p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <a href="{{ url_for('fetch_leads') }}" class="text-xs text-pink-400 hover:text-pink-300">Fetch now →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Tabs -->
+    <div x-data="{ activeTab: 'users' }" class="bg-[#161638] rounded-xl border border-white/10">
+        <!-- Tab Navigation -->
+        <div class="border-b border-white/10 overflow-x-auto">
+            <nav class="flex space-x-1 px-4 min-w-max" aria-label="Admin Tabs">
+                <button @click="activeTab = 'users'"
+                    :class="activeTab === 'users' ? 'bg-pink-500/10 text-pink-400 border-b-2 border-pink-500' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'"
+                    class="py-4 px-4 font-medium text-sm transition-colors flex items-center gap-2 rounded-t-lg">
+                    <i class="fas fa-users"></i>User Management
+                </button>
+                <button @click="activeTab = 'database'"
+                    :class="activeTab === 'database' ? 'bg-pink-500/10 text-pink-400 border-b-2 border-pink-500' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'"
+                    class="py-4 px-4 font-medium text-sm transition-colors flex items-center gap-2 rounded-t-lg">
+                    <i class="fas fa-database"></i>Database
+                </button>
+                <button @click="activeTab = 'scrapers'"
+                    :class="activeTab === 'scrapers' ? 'bg-pink-500/10 text-pink-400 border-b-2 border-pink-500' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'"
+                    class="py-4 px-4 font-medium text-sm transition-colors flex items-center gap-2 rounded-t-lg">
+                    <i class="fas fa-robot"></i>Data Sources
+                </button>
+                <button @click="activeTab = 'settings'"
+                    :class="activeTab === 'settings' ? 'bg-pink-500/10 text-pink-400 border-b-2 border-pink-500' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'"
+                    class="py-4 px-4 font-medium text-sm transition-colors flex items-center gap-2 rounded-t-lg">
+                    <i class="fas fa-cog"></i>System Config
+                </button>
+                <button @click="activeTab = 'logs'"
+                    :class="activeTab === 'logs' ? 'bg-pink-500/10 text-pink-400 border-b-2 border-pink-500' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'"
+                    class="py-4 px-4 font-medium text-sm transition-colors flex items-center gap-2 rounded-t-lg">
+                    <i class="fas fa-file-alt"></i>Activity Logs
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="p-6">
+            <!-- Users Tab -->
+            <div x-show="activeTab === 'users'" x-cloak>
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">Registered Users</h3>
+                        <p class="text-sm text-gray-400 mt-1">Manage user access levels and permissions</p>
+                    </div>
+                    <span class="text-sm text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
+                        <i class="fas fa-users mr-1 text-pink-400"></i>{{ users|length }} total
+                    </span>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-white/10">
+                    <table class="min-w-full divide-y divide-white/10" id="usersTable">
+                        <thead class="bg-white/5">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                    User</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                    Email</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                    Current Role</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                    Joined</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                    Last Login</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for user in users %}
+                            <tr class="hover:bg-white/5 transition-colors" id="user-row-{{ user.id }}">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <img class="h-10 w-10 rounded-full border border-white/10"
+                                            src="{{ user.picture or 'https://ui-avatars.com/api/?name=' + user.name + '&background=ec4899&color=fff' }}"
+                                            alt="{{ user.name }}">
+                                        <div>
+                                            <div class="text-sm font-semibold text-white">{{ user.name }}</div>
+                                            {% if user.id == current_user.id %}
+                                            <span class="text-xs text-yellow-400"><i
+                                                    class="fas fa-star mr-1"></i>You</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ user.email }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap" id="role-badge-{{ user.id }}">
+                                    {% if user.is_admin %}
+                                    <span
+                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                        <i class="fas fa-crown mr-1.5 text-yellow-400"></i>Admin
+                                    </span>
+                                    {% else %}
+                                    <span
+                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                                        <i class="fas fa-user mr-1.5"></i>Client
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                    {{ user.created_at[:10] if user.created_at else 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                    {{ user.last_login[:16] if user.last_login else 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    {% if user.id == current_user.id %}
+                                    <span class="text-gray-600 text-xs italic">Protected (Self)</span>
+                                    {% else %}
+                                    <div class="flex gap-2">
+                                        {% if user.is_admin %}
+                                        <button onclick="updateUserRole('{{ user.id }}', 'client', this)"
+                                            class="px-3 py-1.5 bg-green-500/20 text-green-300 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-all text-xs font-semibold flex items-center gap-1">
+                                            <i class="fas fa-user"></i> Set Client
+                                        </button>
+                                        {% else %}
+                                        <button onclick="updateUserRole('{{ user.id }}', 'admin', this)"
+                                            class="px-3 py-1.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-all text-xs font-semibold flex items-center gap-1">
+                                            <i class="fas fa-crown"></i> Set Admin
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-16 text-center">
+                                    <i class="fas fa-users text-4xl text-gray-700 mb-3"></i>
+                                    <p class="text-gray-500">No users found.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Role Legend -->
+                <div class="mt-4 p-4 bg-white/5 rounded-xl border border-white/10 flex flex-wrap gap-6">
+                    <div class="flex items-center gap-2 text-sm text-gray-400">
+                        <span
+                            class="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded-full text-xs border border-purple-500/30"><i
+                                class="fas fa-crown text-yellow-400 mr-1"></i>Admin</span>
+                        — Full access to all features including this Admin Dashboard
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-400">
+                        <span
+                            class="px-2 py-0.5 bg-green-500/20 text-green-300 rounded-full text-xs border border-green-500/30"><i
+                                class="fas fa-user mr-1"></i>Client</span>
+                        — Access to leads and export tools only
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Tab -->
+            <div x-show="activeTab === 'database'" x-cloak>
+                <h3 class="text-lg font-semibold text-white mb-6">Database Management</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white/5 rounded-xl p-4 border border-white/10 card-glow">
+                        <p class="text-sm text-gray-400">Storage Type</p>
+                        <p class="text-lg font-semibold text-white mt-1">Firestore (Cloud)</p>
+                        <p class="text-xs text-green-400 mt-1"><i class="fas fa-check-circle mr-1"></i>Persistent</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 border border-white/10 card-glow">
+                        <p class="text-sm text-gray-400">Total Records</p>
+                        <p class="text-lg font-semibold text-white mt-1">{{ stats.total_leads }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Leads in database</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 border border-white/10 card-glow">
+                        <p class="text-sm text-gray-400">Project</p>
+                        <p class="text-lg font-semibold text-white mt-1">lively-paratext-487716-r8</p>
+                        <p class="text-xs text-blue-400 mt-1"><i class="fab fa-google mr-1"></i>Google Cloud</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-200">Database Actions</h4>
+                    <div class="flex flex-wrap gap-4">
+                        <form action="{{ url_for('admin_clear_old_leads') }}" method="POST" class="inline">
+                            <button type="submit"
+                                class="px-4 py-2.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-xl hover:bg-yellow-500/30 transition-all font-semibold text-sm flex items-center gap-2"
+                                onclick="return confirm('Clear leads older than 30 days?')">
+                                <i class="fas fa-broom"></i>Clear Old Leads (30+ days)
+                            </button>
+                        </form>
+                        <form action="{{ url_for('admin_clear_all_leads') }}" method="POST" class="inline">
+                            <button type="submit"
+                                class="px-4 py-2.5 bg-red-500/20 text-red-300 border border-red-500/30 rounded-xl hover:bg-red-500/30 transition-all font-semibold text-sm flex items-center gap-2"
+                                onclick="return confirm('Are you sure? This will delete ALL leads!')">
+                                <i class="fas fa-trash"></i>Clear All Leads
+                            </button>
+                        </form>
+                        <a href="{{ url_for('export_csv') }}"
+                            class="px-4 py-2.5 bg-green-500/20 text-green-300 border border-green-500/30 rounded-xl hover:bg-green-500/30 transition-all font-semibold text-sm flex items-center gap-2">
+                            <i class="fas fa-download"></i>Backup to CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Sources Tab -->
+            <div x-show="activeTab === 'scrapers'" x-cloak>
+                <h3 class="text-lg font-semibold text-white mb-6">Data Sources &amp; Collection Status</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border border-white/10 bg-white/5 rounded-xl p-5 card-glow">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                    <i class="fas fa-landmark text-green-400"></i>
+                                </div>
+                                <h4 class="font-semibold text-white">Official Business Filings</h4>
+                            </div>
+                            <span
+                                class="px-2.5 py-1 text-xs rounded-full bg-green-500/20 text-green-300 border border-green-500/30 font-semibold">Active</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-3">Direct connection to primary business registration
+                            sources. Fetches newly registered companies from public government databases.</p>
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <p><i class="fas fa-link mr-1 text-gray-600"></i> Source: Government Business Registries</p>
+                            <p><i class="fas fa-clock mr-1 text-gray-600"></i> Status: Real-time updates</p>
+                        </div>
+                    </div>
+
+                    <div class="border border-white/10 bg-white/5 rounded-xl p-5 card-glow">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                                    <i class="fas fa-sun text-yellow-400"></i>
+                                </div>
+                                <h4 class="font-semibold text-white">Florida Business Database</h4>
+                            </div>
+                            <span
+                                class="px-2.5 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-semibold">Limited</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-3">State business database with anti-bot measures active.
+                            Rate-limited to avoid service disruption.</p>
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <p><i class="fas fa-link mr-1 text-gray-600"></i> Source: Florida Sunbiz</p>
+                            <p><i class="fas fa-shield-alt mr-1 text-gray-600"></i> Requires proxy rotation</p>
+                        </div>
+                    </div>
+
+                    <div class="border border-white/10 bg-white/5 rounded-xl p-5 card-glow">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                    <i class="fas fa-globe text-blue-400"></i>
+                                </div>
+                                <h4 class="font-semibold text-white">Global Company Database</h4>
+                            </div>
+                            <span
+                                class="px-2.5 py-1 text-xs rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold">API
+                                Key</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-3">Comprehensive global company database. Requires API key
+                            for full access to international records.</p>
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <p><i class="fas fa-key mr-1 text-gray-600"></i> API Key: {% if
+                                config.get('OPENCORPORATES_API_KEY') %}<span class="text-green-400">Configured</span>{%
+                                else %}<span class="text-red-400">Not Set</span>{% endif %}</p>
+                        </div>
+                    </div>
+
+                    <div class="border border-white/10 bg-white/5 rounded-xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gray-500/20 flex items-center justify-center">
+                                    <i class="fas fa-vials text-gray-400"></i>
+                                </div>
+                                <h4 class="font-semibold text-white">Sample Data Generator</h4>
+                            </div>
+                            <span
+                                class="px-2.5 py-1 text-xs rounded-full bg-gray-500/20 text-gray-300 border border-gray-500/30 font-semibold">Fallback</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-3">Generated test data for development and demos. Activates
+                            automatically when live sources are unavailable.</p>
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <p><i class="fas fa-info-circle mr-1 text-gray-600"></i> Use when live sources are blocked
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div x-show="activeTab === 'settings'" x-cloak>
+                <h3 class="text-lg font-semibold text-white mb-6">System Configuration</h3>
+                <div class="space-y-6">
+                    <div class="bg-white/5 rounded-xl p-6 border border-white/10">
+                        <h4 class="font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                            <i class="fas fa-key text-pink-400"></i> API Keys & Environment
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div class="flex justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span class="text-gray-400">GOOGLE_CLIENT_ID</span>
+                                <span
+                                    class="{% if config.get('GOOGLE_CLIENT_ID') %}text-green-400{% else %}text-red-400{% endif %} font-medium">
+                                    {% if config.get('GOOGLE_CLIENT_ID') %}<i class="fas fa-check-circle mr-1"></i>Set{%
+                                    else %}<i class="fas fa-times-circle mr-1"></i>Not Set{% endif %}
+                                </span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span class="text-gray-400">GOOGLE_CLIENT_SECRET</span>
+                                <span
+                                    class="{% if config.get('GOOGLE_CLIENT_SECRET') %}text-green-400{% else %}text-red-400{% endif %} font-medium">
+                                    {% if config.get('GOOGLE_CLIENT_SECRET') %}<i
+                                        class="fas fa-check-circle mr-1"></i>Set{% else %}<i
+                                        class="fas fa-times-circle mr-1"></i>Not Set{% endif %}
+                                </span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span class="text-gray-400">SECRET_KEY</span>
+                                <span
+                                    class="{% if config.get('SECRET_KEY') %}text-green-400{% else %}text-red-400{% endif %} font-medium">
+                                    {% if config.get('SECRET_KEY') %}<i class="fas fa-check-circle mr-1"></i>Set{% else
+                                    %}<i class="fas fa-times-circle mr-1"></i>Not Set{% endif %}
+                                </span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span class="text-gray-400">ADMIN_EMAIL</span>
+                                <span class="text-green-400 font-medium text-xs">{{ config.get('ADMIN_EMAIL',
+                                    'samadly728@gmail.com') }}</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span class="text-gray-400">SERPER_API_KEY</span>
+                                <span
+                                    class="{% if config.get('SERPER_API_KEY') %}text-green-400{% else %}text-red-400{% endif %} font-medium">
+                                    {% if config.get('SERPER_API_KEY') %}<i class="fas fa-check-circle mr-1"></i>Set{%
+                                    else %}<i class="fas fa-times-circle mr-1"></i>Not Set{% endif %}
+                                </span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span class="text-gray-400">GEMINI_API_KEY</span>
+                                <span
+                                    class="{% if config.get('GEMINI_API_KEY') %}text-green-400{% else %}text-red-400{% endif %} font-medium">
+                                    {% if config.get('GEMINI_API_KEY') %}<i class="fas fa-check-circle mr-1"></i>Set{%
+                                    else %}<i class="fas fa-times-circle mr-1"></i>Not Set{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/5 rounded-xl p-6 border border-white/10">
+                        <h4 class="font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                            <i class="fab fa-google text-green-400"></i> Google Sheets Integration
+                        </h4>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-300">Status:
+                                    {% if sheets_configured %}
+                                    <span class="text-green-400 font-semibold">Configured</span>
+                                    {% else %}
+                                    <span class="text-orange-400 font-semibold">Not Configured</span>
+                                    {% endif %}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">Service account credentials required for automated
+                                    exports</p>
+                            </div>
+                            <a href="{{ url_for('settings') }}"
+                                class="px-4 py-2 gradient-pink-blue text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+                                Configure →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div x-show="activeTab === 'logs'" x-cloak>
+                <h3 class="text-lg font-semibold text-white mb-6">Recent Activity</h3>
+                <div
+                    class="bg-[#0a0a1a] rounded-xl border border-white/5 p-4 font-mono text-sm max-h-80 overflow-y-auto">
+                    <div class="space-y-2">
+                        {% for log in logs %}
+                        <div class="flex items-start gap-4">
+                            <span class="text-gray-600 shrink-0">{{ log.time }}</span>
+                            <span
+                                class="{% if log.level == 'error' %}text-red-400{% elif log.level == 'warning' %}text-yellow-400{% else %}text-gray-300{% endif %}">
+                                <i
+                                    class="{% if log.level == 'error' %}fas fa-times-circle text-red-400{% elif log.level == 'warning' %}fas fa-exclamation-triangle text-yellow-400{% else %}fas fa-info-circle text-blue-400{% endif %} mr-2"></i>
+                                {{ log.message }}
+                            </span>
+                        </div>
+                        {% else %}
+                        <p class="text-gray-500 italic">No recent activity logs</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-[#161638] rounded-xl border border-white/10 p-6">
+        <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-bolt text-pink-400"></i>Quick Actions
+        </h3>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ url_for('fetch_leads') }}"
+                class="px-4 py-2.5 gradient-pink-blue text-white rounded-xl hover:opacity-90 transition-opacity font-semibold text-sm flex items-center gap-2">
+                <i class="fas fa-download"></i>Fetch New Leads
+            </a>
+            <a href="{{ url_for('leads') }}"
+                class="px-4 py-2.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-xl hover:bg-blue-500/30 transition-all font-semibold text-sm flex items-center gap-2">
+                <i class="fas fa-list"></i>View All Leads
+            </a>
+            <a href="{{ url_for('export_page') }}"
+                class="px-4 py-2.5 bg-green-500/20 text-green-300 border border-green-500/30 rounded-xl hover:bg-green-500/30 transition-all font-semibold text-sm flex items-center gap-2">
+                <i class="fas fa-file-export"></i>Export Data
+            </a>
+            <a href="{{ url_for('enrich_page') }}"
+                class="px-4 py-2.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl hover:bg-purple-500/30 transition-all font-semibold text-sm flex items-center gap-2">
+                <i class="fas fa-magic"></i>Enrich Leads
+            </a>
+            <a href="{{ url_for('settings') }}"
+                class="px-4 py-2.5 bg-white/5 text-gray-300 border border-white/10 rounded-xl hover:bg-white/10 transition-all font-semibold text-sm flex items-center gap-2">
+                <i class="fas fa-cog"></i>Settings
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Notification toast -->
+<div id="roleToast" class="fixed bottom-6 right-6 z-[200] hidden">
+    <div
+        class="bg-[#161638] border border-white/10 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-fade-in">
+        <div id="roleToastIcon" class="w-10 h-10 rounded-full flex items-center justify-center">
+            <i class="fas fa-check text-lg"></i>
+        </div>
+        <div>
+            <p class="font-semibold text-white" id="roleToastTitle">Role Updated</p>
+            <p class="text-xs text-gray-400" id="roleToastMsg">User role has been changed.</p>
+        </div>
+        <button onclick="document.getElementById('roleToast').classList.add('hidden')"
+            class="ml-2 p-1 hover:bg-white/10 rounded-lg">
+            <i class="fas fa-times text-gray-400"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function updateUserRole(userId, newRole, btn) {
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+        try {
+            const response = await fetch('/admin/update-user-role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, role: newRole })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update badge
+                const badgeCell = document.getElementById(`role-badge-${userId}`);
+                if (newRole === 'admin') {
+                    badgeCell.innerHTML = `<span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30"><i class="fas fa-crown mr-1.5 text-yellow-400"></i>Admin</span>`;
+                    btn.innerHTML = '<i class="fas fa-user"></i> Set Client';
+                    btn.className = 'px-3 py-1.5 bg-green-500/20 text-green-300 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-all text-xs font-semibold flex items-center gap-1';
+                    btn.setAttribute('onclick', `updateUserRole('${userId}', 'client', this)`);
+                } else {
+                    badgeCell.innerHTML = `<span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-500/20 text-green-300 border border-green-500/30"><i class="fas fa-user mr-1.5"></i>Client</span>`;
+                    btn.innerHTML = '<i class="fas fa-crown"></i> Set Admin';
+                    btn.className = 'px-3 py-1.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-all text-xs font-semibold flex items-center gap-1';
+                    btn.setAttribute('onclick', `updateUserRole('${userId}', 'admin', this)`);
+                }
+
+                showToast(
+                    newRole === 'admin' ? 'bg-purple-500/20 border-purple-500/30' : 'bg-green-500/20 border-green-500/30',
+                    newRole === 'admin' ? 'fas fa-crown text-yellow-400' : 'fas fa-user text-green-400',
+                    'Role Updated',
+                    `User is now ${newRole === 'admin' ? 'an Admin' : 'a Client'}`,
+                    false
+                );
+            } else {
+                showToast('bg-red-500/20 border-red-500/30', 'fas fa-times-circle text-red-400', 'Error', data.error || 'Failed to update role', true);
+                btn.innerHTML = originalHtml;
+            }
+        } catch (error) {
+            showToast('bg-red-500/20 border-red-500/30', 'fas fa-times-circle text-red-400', 'Error', 'Network error. Please try again.', true);
+            btn.innerHTML = originalHtml;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function showToast(containerClass, iconClass, title, msg, isError) {
+        const toast = document.getElementById('roleToast');
+        const iconEl = document.getElementById('roleToastIcon');
+        const titleEl = document.getElementById('roleToastTitle');
+        const msgEl = document.getElementById('roleToastMsg');
+
+        toast.querySelector('.bg-\\[\\#161638\\]') && (toast.querySelector('div').className = `bg-[#161638] border ${containerClass} px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-fade-in`);
+        iconEl.innerHTML = `<i class="${iconClass} text-lg"></i>`;
+        titleEl.textContent = title;
+        msgEl.textContent = msg;
+
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+</script>
+{% endblock %}

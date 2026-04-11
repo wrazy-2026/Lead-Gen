@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - LeadGen Pro{% endblock %}
+{% block page_title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4">
+    <div class="glass-card rounded-[2rem] p-8 md:p-12 border border-white/10 glow-pink">
+        <h1 class="text-4xl font-black mb-8 hero-title text-white">Privacy <span
+                class="gradient-text-pink">Policy</span></h1>
+
+        <div class="space-y-8 text-gray-300 leading-relaxed">
+            <section>
+                <h2 class="text-2xl font-bold text-white mb-4">1. Information We Collect</h2>
+                <p>LeadGen Pro ("we", "us", "our") collects information to provide better services to our users. We
+                    collect:</p>
+                <ul class="list-disc ml-6 mt-4 space-y-2 text-pink-400/80">
+                    <li><span class="text-gray-300 font-semibold">Account Information:</span> When you sign in with
+                        Google, we receive your name, email address, and profile picture.</li>
+                    <li><span class="text-gray-300 font-semibold">Google Integration Data:</span> If you choose to
+                        connect Google Sheets, we store the OAuth tokens necessary to perform exports on your behalf.
+                    </li>
+                    <li><span class="text-gray-300 font-semibold">Usage Data:</span> We may collect logs of your
+                        activity to improve platform performance and security.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-bold text-white mb-4">2. How We Use Data</h2>
+                <p>We use the collected data for the following purposes:</p>
+                <ul class="list-disc ml-6 mt-4 space-y-2 text-pink-400/80">
+                    <li>To authenticate your identity and provide access to the dashboard.</li>
+                    <li>To facilitate the export of lead data to your connected Google Sheets.</li>
+                    <li>To maintain and improve the security of the application.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-bold text-white mb-4">3. Data Sharing</h2>
+                <p>We do not sell your personal data. We only share information with third-party APIs (like Google,
+                    Serper, or Apify) as strictly necessary to perform the lead generation and enrichment services you
+                    request.</p>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-bold text-white mb-4">4. Google Analytics & User Data</h2>
+                <p>Our app's use of information received from Google APIs will adhere to the <a
+                        href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes"
+                        class="text-pink-400 hover:underline">Google API Services User Data Policy</a>, including the
+                    Limited Use requirements.</p>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-bold text-white mb-4">5. Your Rights</h2>
+                <p>You can disconnect your Google account or delete your data at any time through the platform settings.
+                    For further assistance, contact us at {{ config.ADMIN_EMAIL }}.</p>
+            </section>
+        </div>
+
+        <div class="mt-12 pt-8 border-t border-white/10 text-center">
+            <p class="text-gray-500 text-sm">Last Updated: February 23, 2026</p>
+            <a href="{{ url_for('landing') }}"
+                class="inline-block mt-6 text-pink-400 hover:text-pink-300 font-semibold">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Old Scrapper - Classic Mode{% endblock %}
+{% block page_title %}Old Scrapper (Classic Mode){% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="rounded-2xl bg-gradient-to-r from-amber-600 to-orange-700 p-8 text-white shadow-xl">
+        <div class="flex items-center gap-6">
+            <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+                <i class="fas fa-history text-4xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold">Classic Scrapper</h2>
+                <p class="text-amber-100 mt-1">Original Flask-only scraper - simple form submission, no React/Vite</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
+        <form method="POST" action="{{ url_for('do_old_scrape') }}" id="scrapeForm">
+
+            <!-- Data Source Selection -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-database text-amber-500 mr-2"></i>Select Data Source
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="source" value="sec_edgar" checked class="peer sr-only">
+                        <div
+                            class="p-5 rounded-xl border-2 border-gray-200 peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-landmark text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-900">SEC EDGAR</p>
+                                    <p class="text-sm text-gray-500">FREE - Public company filings</p>
+                                    <p class="text-xs text-green-600 mt-1"><i
+                                            class="fas fa-check-circle mr-1"></i>Recommended</p>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="source" value="florida" class="peer sr-only">
+                        <div
+                            class="p-5 rounded-xl border-2 border-gray-200 peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center">
+                                    <i class="fas fa-sun text-orange-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-900">Florida Sunbiz</p>
+                                    <p class="text-sm text-gray-500">FREE - Florida state filings</p>
+                                    <p class="text-xs text-gray-400 mt-1">Requires Playwright</p>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Search Options -->
+            <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-search text-amber-500 mr-1"></i>Search Term (Optional)
+                    </label>
+                    <input type="text" name="search_term" value="" placeholder="e.g., TECH, LLC, NEW"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Leave empty for recent filings</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-list-ol text-amber-500 mr-1"></i>Number of Results
+                    </label>
+                    <select name="limit"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                        <option value="10">10 records</option>
+                        <option value="25" selected>25 records</option>
+                        <option value="50">50 records</option>
+                        <option value="100">100 records</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- State Selection (for Florida scraper) -->
+            <div id="stateSelection" class="mb-8 hidden">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-map-marker-alt text-amber-500 mr-2"></i>Select States
+                </h3>
+                <p class="text-sm text-gray-500 mb-4">Currently only Florida is available for direct state scraping. SEC
+                    EDGAR has nationwide coverage.</p>
+                <div class="grid grid-cols-5 md:grid-cols-10 gap-2">
+                    {% set all_states =
+                    ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
+                    %}
+                    {% for state in all_states %}
+                    <label class="cursor-pointer">
+                        <input type="checkbox" name="states" value="{{ state }}" {% if state=='FL' %}checked{% endif %}
+                            class="peer sr-only" {% if state !='FL' %}disabled{% endif %}>
+                        <div class="py-2 px-1 text-center rounded-lg border-2 border-gray-200 
+                            {% if state == 'FL' %}peer-checked:border-amber-500 peer-checked:bg-amber-50 cursor-pointer{% else %}bg-gray-100 opacity-50 cursor-not-allowed{% endif %} 
+                            transition-all text-sm font-medium">
+                            {{ state }}
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>More states coming soon.
+                    Use SEC EDGAR for nationwide coverage.</p>
+            </div>
+
+            <!-- Options -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-cogs text-amber-500 mr-2"></i>Options
+                </h3>
+                <div class="space-y-3">
+                    <label
+                        class="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                        <input type="checkbox" name="save_to_db" value="on" checked
+                            class="w-5 h-5 rounded text-amber-500 focus:ring-amber-500">
+                        <div>
+                            <span class="font-medium text-gray-900">Save to Database</span>
+                            <p class="text-sm text-gray-500">Automatically save all results to your leads database</p>
+                        </div>
+                    </label>
+                    <label
+                        class="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                        <input type="checkbox" name="find_owners" value="on"
+                            class="w-5 h-5 rounded text-amber-500 focus:ring-amber-500">
+                        <div>
+                            <span class="font-medium text-gray-900">Find Owners (Serper)</span>
+                            <p class="text-sm text-gray-500">Use Google search to find business owners - uses Serper API
+                                credits</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-clock mr-1"></i>Estimated time: 10-30 seconds
+                </div>
+                <button type="submit" id="submitBtn" class="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl 
+                           hover:from-amber-600 hover:to-orange-700 transition-all font-semibold text-lg
+                           shadow-lg shadow-amber-200 flex items-center gap-3">
+                    <i class="fas fa-play"></i>
+                    Start Scraping
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section (shown after form submission via flash) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
+        {% for category, message in messages %}
+        <div
+            class="p-4 rounded-xl {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif category == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+            <i
+                class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Info Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-xl bg-blue-50 p-5 border border-blue-100">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-landmark text-blue-600"></i>
+                </div>
+                <h4 class="font-semibold text-blue-900">SEC EDGAR</h4>
+            </div>
+            <p class="text-sm text-blue-700">Free access to all public company SEC filings. Includes 10-K, S-1, 8-K
+                forms. No API key needed.</p>
+        </div>
+
+        <div class="rounded-xl bg-amber-50 p-5 border border-amber-100">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <i class="fas fa-history text-amber-600"></i>
+                </div>
+                <h4 class="font-semibold text-amber-900">Classic Mode</h4>
+            </div>
+            <p class="text-sm text-amber-700">Simple form submission without JavaScript dependencies. Works on any
+                browser.</p>
+        </div>
+
+        <div class="rounded-xl bg-green-50 p-5 border border-green-100">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
+                    <i class="fas fa-database text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-green-900">Auto-Save</h4>
+            </div>
+            <p class="text-sm text-green-700">Results automatically saved to your database. View them in All Leads after
+                scraping.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sourceRadios = document.querySelectorAll('input[name="source"]');
+        const stateSelection = document.getElementById('stateSelection');
+        const submitBtn = document.getElementById('submitBtn');
+        const form = document.getElementById('scrapeForm');
+
+        // Show/hide state selection based on source
+        sourceRadios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                if (this.value === 'florida') {
+                    stateSelection.classList.remove('hidden');
+                } else {
+                    stateSelection.classList.add('hidden');
+                }
+            });
+        });
+
+        // Form submission loading state
+        form.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Scraping...';
+        });
+    });
+</script>
+{% endblock %}

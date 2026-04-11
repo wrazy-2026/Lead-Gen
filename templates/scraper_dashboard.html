@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block page_title %}Global Discovery Monitor{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-3xl font-bold gradient-text-pink">Global Discovery Monitor</h2>
+            <p class="text-gray-400 mt-1">Automated Business Registration Discovery across all 52 Jurisdictions</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span
+                class="px-3 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-full text-xs font-medium flex items-center gap-2">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                Discovery System Operational
+            </span>
+        </div>
+    </div>
+
+    <!-- Stats Hub -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Daily Coverage -->
+        <div
+            class="glass-dark rounded-2xl p-6 border border-white/5 relative overflow-hidden group hover:border-pink-500/30 transition-all duration-300">
+            <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i class="fas fa-globe-americas text-6xl"></i>
+            </div>
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Daily Coverage</h3>
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-white">52</span>
+                <span class="text-sm text-green-400 font-medium tracking-tight">US Jurisdictions</span>
+            </div>
+            <div class="mt-4 h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-pink-500 to-purple-600 rounded-full" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <!-- Last Run Status -->
+        <div
+            class="glass-dark rounded-2xl p-6 border border-white/5 group hover:border-blue-500/30 transition-all duration-300">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Last Run Status</h3>
+            <div class="flex items-center gap-2">
+                <span class="text-3xl font-bold text-emerald-400">Successful</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <i class="far fa-clock"></i> {{ stats.get('last_run', 'Never') }}
+            </p>
+        </div>
+
+        <!-- New Leads (24h) -->
+        <div
+            class="glass-dark rounded-2xl p-6 border border-white/5 group hover:border-fuchsia-500/30 transition-all duration-300">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">New Leads (24h)</h3>
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold text-white">{{ stats.get('total_records', 0) }}</span>
+                <span class="text-xs text-gray-500">Live aggregated</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Updating database in real-time</p>
+        </div>
+
+        <!-- Action Card -->
+        <div class="flex items-center">
+            <button id="triggerScraper"
+                class="w-full py-4 bg-gradient-to-r from-pink-600 to-purple-700 hover:from-pink-500 hover:to-purple-600 text-white rounded-2xl font-bold shadow-lg shadow-pink-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
+                <i class="fas fa-play"></i> Trigger Manual Run
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Missing States Coverage -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="glass-dark rounded-2xl border border-white/5 overflow-hidden">
+                <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-map-marked-alt text-pink-500"></i>
+                        Targeted States Activation
+                    </h3>
+                    <span
+                        class="px-2 py-1 bg-pink-500/20 text-pink-400 text-[10px] font-bold uppercase rounded tracking-widest">
+                        20+ Previously Missing
+                    </span>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-400 mb-6">The following states are now fully integrated and monitored
+                        via our direct data activation network.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {% for state in missing_states %}
+                        <div
+                            class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 hover:border-pink-500/20 hover:bg-white/[0.07] transition-all group">
+                            <span
+                                class="w-8 h-8 flex items-center justify-center bg-dark-700 rounded-lg text-xs font-bold text-gray-300 group-hover:text-pink-400 transition-colors">{{
+                                state }}</span>
+                            <div class="flex flex-col">
+                                <span
+                                    class="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Status</span>
+                                <span class="text-xs text-green-400 font-medium">Active</span>
+                            </div>
+                            <div
+                                class="ml-auto w-1.5 h-1.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-dark-800/50 border-t border-white/5">
+                    <div class="flex items-center gap-3 text-sm text-gray-400 italic">
+                        <i class="fas fa-info-circle text-blue-400"></i>
+                        <span>All 52 jurisdictions (50 States + DC + PR) are now active.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Discovery Network -->
+        <div class="space-y-6">
+            <div class="glass-dark rounded-2xl border border-white/5 overflow-hidden">
+                <div class="px-6 py-4 border-b border-white/5 bg-white/5">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-server text-blue-500"></i>
+                        Active Discovery Modules
+                    </h3>
+                </div>
+                <div class="divide-y divide-white/5 h-[500px] overflow-y-auto custom-scrollbar">
+                    {% for s in scrapers %}
+                    <div class="p-4 hover:bg-white/5 transition-colors flex items-center justify-between group">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-microchip text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-white">{{ s.state_name }}</h4>
+                                <p class="text-[10px] text-gray-500">System Discovery Engine</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold text-green-400 tracking-widest uppercase">Live</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="scrapeModal"
+    class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div
+        class="glass-dark w-full max-w-md rounded-2xl border border-pink-500/30 p-8 text-center animate-fade-in shadow-2xl shadow-pink-500/20">
+        <div id="modalLoading">
+            <div class="inline-block relative w-20 h-20 mb-6">
+                <div class="absolute inset-0 border-4 border-pink-500/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-pink-500 rounded-full border-t-transparent animate-spin">
+                </div>
+                <div class="absolute inset-4 flex items-center justify-center text-pink-500">
+                    <i class="fas fa-satellite text-2xl animate-pulse"></i>
+                </div>
+            </div>
+            <h4 class="text-xl font-bold text-white mb-2">Discovery Network Active</h4>
+            <p class="text-gray-400 text-sm mb-6">Aggregating latest business registrations...</p>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-800 rounded-full h-3 mb-2 overflow-hidden border border-white/5">
+                <div id="progressBar"
+                    class="bg-gradient-to-r from-pink-500 to-purple-600 h-full w-0 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(236,72,153,0.5)]">
+                </div>
+            </div>
+            <div class="flex justify-between text-[10px] text-gray-500 font-bold uppercase tracking-widest px-1">
+                <span id="progressStatus">Initializing...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+        </div>
+
+        <div id="modalResult" class="hidden">
+            <div id="resultIcon"
+                class="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h4 id="resultTitle" class="text-xl font-bold text-white mb-2">Process Complete</h4>
+            <p id="resultText" class="text-gray-400 text-sm mb-8"></p>
+            <button onclick="closeModal()"
+                class="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors font-medium">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('scrapeModal');
+    const modalLoading = document.getElementById('modalLoading');
+    const modalResult = document.getElementById('modalResult');
+    const resultText = document.getElementById('resultText');
+    const progressBar = document.getElementById('progressBar');
+    const progressStatus = document.getElementById('progressStatus');
+    const progressPercent = document.getElementById('progressPercent');
+
+    function updateProgress(percent, status) {
+        progressBar.style.width = percent + '%';
+        progressPercent.textContent = percent + '%';
+        if (status) progressStatus.textContent = status;
+    }
+
+    document.getElementById('triggerScraper').addEventListener('click', function () {
+        modal.classList.remove('hidden');
+        modalLoading.classList.remove('hidden');
+        modalResult.classList.add('hidden');
+
+        updateProgress(5, "Contacting Jurisdictions...");
+
+        // Multi-stage simulation of progress since backend is a single long-poll
+        let progress = 5;
+        const interval = setInterval(() => {
+            if (progress < 90) {
+                progress += Math.random() * 8;
+                let status = "Scanning Registers...";
+                if (progress > 30) status = "Aggregating Records...";
+                if (progress > 60) status = "Verifying Integrity...";
+                if (progress > 80) status = "Finalizing Pipeline...";
+                updateProgress(Math.min(95, Math.floor(progress)), status);
+            }
+        }, 1200);
+
+        // Use AbortController to enforce a 55s timeout (Cloud Run limit is 60s)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 55000);
+
+        fetch('/api/scraper/global', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ limit: 10 }),
+            signal: controller.signal
+        })
+            .then(async response => {
+                clearTimeout(timeoutId);
+                // Safely read body as text first, then parse JSON
+                const text = await response.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    // Server returned non-JSON (e.g. timeout HTML/text)
+                    if (text.toLowerCase().includes('timeout') || text.toLowerCase().includes('upstream')) {
+                        return { success: false, error: 'The request timed out. The discovery run took too long — try with fewer states or check back shortly.' };
+                    }
+                    return { success: false, error: `Unexpected server response: ${text.substring(0, 120)}` };
+                }
+            })
+            .then(data => {
+                clearInterval(interval);
+                updateProgress(100, "Complete");
+
+                setTimeout(() => {
+                    modalLoading.classList.add('hidden');
+                    modalResult.classList.remove('hidden');
+
+                    if (data.success) {
+                        resultText.innerHTML = `Found <span class="text-white font-bold">${data.inserted + data.duplicates}</span> records. <br>Successfully inserted <span class="text-green-400 font-bold">${data.inserted}</span> new leads.`;
+                        setTimeout(() => location.reload(), 3000);
+                    } else {
+                        document.getElementById('resultIcon').className = "w-16 h-16 bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl";
+                        document.getElementById('resultIcon').innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                        document.getElementById('resultTitle').textContent = "Could Not Complete";
+                        resultText.textContent = data.error || 'Unknown error occurred.';
+                    }
+                }, 500);
+            })
+            .catch(error => {
+                clearTimeout(timeoutId);
+                clearInterval(interval);
+                modalLoading.classList.add('hidden');
+                modalResult.classList.remove('hidden');
+                document.getElementById('resultIcon').className = "w-16 h-16 bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl";
+                document.getElementById('resultIcon').innerHTML = '<i class="fas fa-clock"></i>';
+                const isTimeout = error.name === 'AbortError' || String(error).includes('abort');
+                document.getElementById('resultTitle').textContent = isTimeout ? "Request Timed Out" : "Connection Error";
+                resultText.textContent = isTimeout
+                    ? 'The discovery run is taking longer than expected. Leads may still be saved in the background — check the All Leads page in a minute.'
+                    : `Connection failed: ${error.message || error}`;
+            });
+    });
+
+    function closeModal() {
+        modal.classList.add('hidden');
+    }
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}

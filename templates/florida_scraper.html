@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+
+{% block title %}Florida Sunbiz Scraper - LeadGen Pro{% endblock %}
+{% block page_title %}Florida Sunbiz Scraper{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in" x-data="floridaScraper()" x-init="init()">
+
+    <!-- Header -->
+    <div class="glass-dark rounded-3xl p-8 border border-white/10 shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-orange-500/20 rounded-full blur-[100px]"></div>
+        <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-pink-500/20 rounded-full blur-[100px]"></div>
+        <div class="relative flex items-center gap-8">
+            <div class="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-pink-600 shadow-lg glow-pink">
+                <i class="fas fa-sun text-4xl text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-4xl font-extrabold text-white tracking-tight">Florida Sunbiz <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-400">Scraper</span></h1>
+                <p class="text-gray-400 mt-2 text-lg">Search Florida home-service businesses from the Sunbiz registry</p>
+                <div class="flex items-center gap-4 mt-4">
+                    <span class="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/20">
+                        <i class="fas fa-bolt mr-1"></i> Real-time Scraping
+                    </span>
+                    <span class="px-3 py-1 bg-orange-500/20 text-orange-400 text-xs font-bold rounded-full border border-orange-500/20">
+                        <i class="fas fa-database mr-1"></i> Sunbiz Registry
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Settings -->
+    <div class="glass-dark rounded-2xl border border-white/5 overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <i class="fas fa-search text-pink-500"></i> Search Settings
+            </h3>
+            <span class="text-xs text-gray-500">Click keywords to select/deselect</span>
+        </div>
+        <div class="p-6 space-y-6">
+            <!-- Keyword Tags -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-3">Keywords</label>
+                <div class="flex flex-wrap gap-2" id="keywordTags">
+                    <template x-for="kw in allKeywords" :key="kw">
+                        <button @click="toggleKeyword(kw)"
+                            :class="selectedKeywords.has(kw)
+                                ? 'bg-gradient-to-r from-pink-600 to-purple-700 text-white border-pink-500/50 shadow-lg shadow-pink-500/20'
+                                : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:text-white'"
+                            class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200"
+                            x-text="kw">
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Custom Keyword + Max Results -->
+            <div class="flex flex-wrap items-end gap-4">
+                <div class="flex-1 min-w-[200px]">
+                    <label for="customKeyword" class="block text-sm font-semibold text-gray-300 mb-2">Custom Keyword</label>
+                    <input type="text" id="customKeyword" x-model="customKeyword" @keydown.enter.prevent="addCustomKeyword()"
+                        placeholder="e.g. fencing"
+                        class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 transition-all">
+                </div>
+                <button @click="addCustomKeyword()" class="px-4 py-2.5 bg-white/10 text-gray-300 rounded-xl border border-white/10 hover:bg-white/20 hover:text-white transition-all font-semibold text-sm">
+                    <i class="fas fa-plus mr-1"></i> Add
+                </button>
+                <div class="w-32">
+                    <label for="maxResults" class="block text-sm font-semibold text-gray-300 mb-2">Max per keyword</label>
+                    <input type="number" id="maxResults" x-model.number="maxResults" min="1" max="500"
+                        class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 transition-all text-center">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3 flex-wrap">
+                <button @click="startScrape()" :disabled="isRunning || selectedKeywords.size === 0"
+                    :class="isRunning ? 'opacity-50 cursor-not-allowed' : 'hover:from-pink-500 hover:to-purple-600 hover:scale-[1.02] active:scale-[0.98]'"
+                    class="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-700 text-white rounded-xl font-bold shadow-lg shadow-pink-500/20 transition-all duration-300 flex items-center gap-2">
+                    <i :class="isRunning ? 'fas fa-spinner fa-spin' : 'fas fa-play'"></i>
+                    <span x-text="isRunning ? 'Scraping...' : 'Start Scraping'"></span>
+                </button>
+                <button @click="selectAll()" class="px-4 py-2.5 bg-white/5 text-gray-300 rounded-xl border border-white/10 hover:bg-white/10 hover:text-white transition-all text-sm font-semibold">
+                    Select All
+                </button>
+                <button @click="selectNone()" class="px-4 py-2.5 bg-white/5 text-gray-300 rounded-xl border border-white/10 hover:bg-white/10 hover:text-white transition-all text-sm font-semibold">
+                    Clear All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div x-show="statusMessage" x-transition
+        :class="{
+            'bg-yellow-500/10 border-yellow-500/20 text-yellow-400': scrapeStatus === 'running',
+            'bg-green-500/10 border-green-500/20 text-green-400': scrapeStatus === 'done',
+            'bg-red-500/10 border-red-500/20 text-red-400': scrapeStatus === 'error'
+        }"
+        class="rounded-xl px-5 py-3 border flex items-center gap-3 text-sm font-medium">
+        <i :class="{
+            'fas fa-spinner fa-spin': scrapeStatus === 'running',
+            'fas fa-check-circle': scrapeStatus === 'done',
+            'fas fa-exclamation-circle': scrapeStatus === 'error'
+        }"></i>
+        <span x-text="statusMessage"></span>
+    </div>
+
+    <!-- Log Panel -->
+    <div class="glass-dark rounded-2xl border border-white/5 overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+            <h3 class="font-bold text-white flex items-center gap-2">
+                <i class="fas fa-terminal text-pink-500"></i> Scraper Log
+            </h3>
+            <div class="flex items-center gap-3">
+                <label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                    <input type="checkbox" x-model="autoScroll" class="rounded border-gray-600 bg-white/10 text-pink-500 focus:ring-pink-500/50">
+                    Auto-scroll
+                </label>
+                <button @click="clearLog()" class="px-3 py-1.5 bg-white/5 text-gray-400 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold">
+                    Clear
+                </button>
+            </div>
+        </div>
+        <div id="logBox" class="p-4 h-72 overflow-y-auto font-mono text-xs leading-relaxed bg-[#0a0a1a]">
+            <div class="text-gray-600">Waiting for scrape to start...</div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="glass-dark rounded-2xl border border-white/5 overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-table text-pink-500"></i> Results
+                </h3>
+                <p class="text-xs text-gray-500 mt-1" x-text="businesses.length ? businesses.length + ' businesses found' : 'No results yet'"></p>
+            </div>
+            <div x-show="businesses.length > 0" class="flex items-center gap-2">
+                <a href="{{ url_for('florida_download_csv') }}" class="px-4 py-2 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold flex items-center gap-2">
+                    <i class="fas fa-file-csv"></i> Download CSV
+                </a>
+                <a href="{{ url_for('florida_download_json') }}" class="px-4 py-2 bg-white/5 text-gray-300 rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all text-xs font-semibold flex items-center gap-2">
+                    <i class="fas fa-file-code"></i> Download JSON
+                </a>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-white/5 bg-white/[0.02]">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">#</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Doc #</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Filing Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Principal Address</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-if="businesses.length === 0">
+                        <tr>
+                            <td colspan="8" class="px-4 py-12 text-center text-gray-500">
+                                <i class="fas fa-inbox text-3xl mb-3 block"></i>
+                                <span x-text="isLoading ? 'Loading saved data...' : 'Run a scrape to see results here.'"></span>
+                            </td>
+                        </tr>
+                    </template>
+                    <template x-for="(biz, idx) in businesses" :key="idx">
+                        <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                            <td class="px-4 py-3 text-gray-500" x-text="idx + 1"></td>
+                            <td class="px-4 py-3 text-white font-medium" x-text="biz.name || ''"></td>
+                            <td class="px-4 py-3 text-gray-300" x-text="biz.document_number || ''"></td>
+                            <td class="px-4 py-3">
+                                <span :class="(biz.status || '').toLowerCase().includes('active') ? 'text-green-400' : 'text-red-400'"
+                                    x-text="biz.status || ''"></span>
+                            </td>
+                            <td class="px-4 py-3 text-gray-300" x-text="biz.filing_date || ''"></td>
+                            <td class="px-4 py-3 text-gray-400 text-xs max-w-xs truncate" x-text="biz.principal_address || ''"></td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-0.5 bg-pink-500/10 text-pink-400 text-xs rounded-full" x-text="biz.category || ''"></span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <template x-if="biz.detail_url">
+                                    <a :href="biz.detail_url" target="_blank" class="text-blue-400 hover:text-blue-300 underline text-xs">
+                                        <i class="fas fa-external-link-alt mr-1"></i>View
+                                    </a>
+                                </template>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function floridaScraper() {
+    return {
+        allKeywords: {{ keywords | tojson }},
+        selectedKeywords: new Set({{ keywords[:3] | tojson }}),
+        customKeyword: '',
+        maxResults: 20,
+        isRunning: false,
+        isLoading: false,
+        scrapeStatus: '',
+        statusMessage: '',
+        autoScroll: true,
+        businesses: [],
+        logCursor: 0,
+        pollTimer: null,
+
+        init() {
+            // Load persisted data on page load
+            this.loadPersistedData();
+        },
+
+        async loadPersistedData() {
+            this.isLoading = true;
+            try {
+                const resp = await fetch('/api/florida/persisted');
+                const data = await resp.json();
+                if (data && data.length > 0) {
+                    this.businesses = data;
+                }
+            } catch (e) {
+                console.error('Failed to load persisted data:', e);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        toggleKeyword(kw) {
+            if (this.selectedKeywords.has(kw)) {
+                this.selectedKeywords.delete(kw);
+            } else {
+                this.selectedKeywords.add(kw);
+            }
+            // Force reactivity
+            this.selectedKeywords = new Set(this.selectedKeywords);
+        },
+
+        selectAll() {
+            this.selectedKeywords = new Set(this.allKeywords);
+        },
+
+        selectNone() {
+            this.selectedKeywords = new Set();
+        },
+
+        addCustomKeyword() {
+            const kw = this.customKeyword.trim();
+            if (!kw) return;
+            if (!this.allKeywords.includes(kw)) {
+                this.allKeywords.push(kw);
+            }
+            this.selectedKeywords.add(kw);
+            this.selectedKeywords = new Set(this.selectedKeywords);
+            this.customKeyword = '';
+        },
+
+        classifyLine(text) {
+            if (/ERROR|FAIL|exception/i.test(text)) return 'text-red-400';
+            if (/^={3,}|^KEYWORD:/i.test(text)) return 'text-blue-400 font-bold';
+            if (/OK\s*[-–]|complete:|Done!/i.test(text)) return 'text-green-400';
+            if (/Navigat|Typed|Clicked|Pressed|loaded|Found|Parsed/i.test(text)) return 'text-gray-200';
+            return 'text-gray-500';
+        },
+
+        appendLogLines(lines) {
+            const box = document.getElementById('logBox');
+            lines.forEach(text => {
+                const div = document.createElement('div');
+                div.className = this.classifyLine(text);
+                div.textContent = text;
+                box.appendChild(div);
+            });
+            if (this.autoScroll) box.scrollTop = box.scrollHeight;
+        },
+
+        clearLog() {
+            const box = document.getElementById('logBox');
+            box.innerHTML = '<div class="text-gray-600">Log cleared.</div>';
+        },
+
+        async startScrape() {
+            const keywords = Array.from(this.selectedKeywords);
+            if (!keywords.length) return;
+
+            this.isRunning = true;
+            this.scrapeStatus = 'running';
+            this.statusMessage = 'Scraping in progress...';
+            document.getElementById('logBox').innerHTML = '';
+            this.logCursor = 0;
+
+            try {
+                const resp = await fetch('{{ url_for("florida_api_scrape") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keywords, max_per_category: this.maxResults })
+                });
+                const data = await resp.json();
+                if (data.status === 'started' || data.status === 'running') {
+                    this.pollStatus();
+                }
+            } catch (e) {
+                this.scrapeStatus = 'error';
+                this.statusMessage = 'Failed to start scrape: ' + e.message;
+                this.isRunning = false;
+            }
+        },
+
+        pollStatus() {
+            if (this.pollTimer) clearInterval(this.pollTimer);
+            this.pollTimer = setInterval(async () => {
+                try {
+                    const [statusResp, logResp] = await Promise.all([
+                        fetch('{{ url_for("florida_api_status") }}'),
+                        fetch('{{ url_for("florida_api_logs") }}?after=' + this.logCursor)
+                    ]);
+                    const sData = await statusResp.json();
+                    const lData = await logResp.json();
+
+                    if (lData.lines && lData.lines.length) {
+                        this.appendLogLines(lData.lines);
+                        this.logCursor = lData.cursor;
+                    }
+
+                    if (sData.status === 'running') {
+                        this.scrapeStatus = 'running';
+                        this.statusMessage = sData.progress || 'Scraping...';
+                    } else if (sData.status === 'done') {
+                        clearInterval(this.pollTimer);
+                        this.scrapeStatus = 'done';
+                        this.statusMessage = sData.message;
+                        this.isRunning = false;
+                        this.loadResults();
+                    } else if (sData.status === 'error') {
+                        clearInterval(this.pollTimer);
+                        this.scrapeStatus = 'error';
+                        this.statusMessage = sData.message;
+                        this.isRunning = false;
+                    }
+                } catch (_) {}
+            }, 800);
+        },
+
+        async loadResults() {
+            try {
+                // First try to get current session results
+                const resp = await fetch('{{ url_for("florida_api_results") }}');
+                const data = await resp.json();
+                if (data && data.length > 0) {
+                    this.businesses = data;
+                } else {
+                    // Fallback to persisted data
+                    await this.loadPersistedData();
+                }
+            } catch (_) {
+                // Fallback to persisted data
+                await this.loadPersistedData();
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

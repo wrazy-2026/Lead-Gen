@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script>
+    function statesReportData() {
+        return {
+            search: '',
+            loading: false,
+            statesData: {{ stats | tojson }}
+        };
+    }
+</script>
+<div class="px-4 sm:px-6 lg:px-8 py-8" x-data="statesReportData()">
+    <!-- Header Area -->
+    <div class="sm:flex sm:items-center mb-8">
+        <div class="sm:flex-auto">
+            <h1 class="text-3xl font-bold text-white mb-2">States Distribution Report</h1>
+            <p class="text-sm text-gray-400">Total statistics of discovery across all 52 states and jurisdictions.</p>
+        </div>
+        <div class="mt-4 sm:ml-16 sm:mt-0 flex space-x-3">
+            <button @click="window.location.href='/states-report?refresh=true'; loading=true" :disabled="loading"
+                class="btn-glow px-4 py-2 rounded-lg text-sm font-semibold flex items-center disabled:opacity-50">
+                <template x-if="!loading">
+                    <span><i class="fas fa-sync-alt mr-2"></i>Refresh Data</span>
+                </template>
+                <template x-if="loading">
+                    <span><i class="fas fa-spinner fa-spin mr-2"></i>Recalculating...</span>
+                </template>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="glass-card rounded-2xl p-6 border border-white/10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400">Total Leads</p>
+                    <p class="text-3xl font-bold text-white mt-1">{{ total_leads }}</p>
+                </div>
+                <div class="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-pink-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 border border-white/10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400">States Covered</p>
+                    <p class="text-3xl font-bold text-white mt-1">{{ stats|length }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-map-marked-alt text-blue-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 border border-white/10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-400">Top State</p>
+                    <p class="text-3xl font-bold text-white mt-1">{{ stats[0].name if stats else 'N/A' }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-trophy text-purple-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Tool -->
+    <div class="mb-6 relative">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i class="fas fa-search text-gray-500"></i>
+        </div>
+        <input type="text" x-model="search" placeholder="Search state name or code..."
+            class="w-full bg-[#161638] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
+    </div>
+
+    <!-- Report Table -->
+    <div class="glass-card rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+        <table class="min-w-full divide-y divide-white/10">
+            <thead class="bg-white/5">
+                <tr>
+                    <th scope="col"
+                        class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">#</th>
+                    <th scope="col"
+                        class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">State
+                        Name</th>
+                    <th scope="col"
+                        class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Discovered Leads</th>
+                    <th scope="col"
+                        class="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Coverage %</th>
+                    <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                <template x-for="(state, index) in statesData" :key="state.code">
+                    <tr x-show="!search || state.name.toLowerCase().includes(search.toLowerCase()) || state.code.toLowerCase().includes(search.toLowerCase())"
+                        class="hover:bg-white/5 transition-colors group">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="index + 1"></td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span
+                                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-400 text-xs font-bold mr-3"
+                                    x-text="state.code"></span>
+                                <span class="text-sm font-medium text-white" x-text="state.name"></span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="text-base font-bold text-white mr-2" x-text="state.count"></span>
+                                <div class="w-24 h-2 bg-gray-700 rounded-full overflow-hidden hidden md:block">
+                                    <div class="h-full bg-gradient-to-r from-pink-500 to-purple-500"
+                                        :style="'width: ' + state.percentage + '%'"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span
+                                class="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-400"
+                                x-text="state.percentage + '%'"></span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a :href="'/leads?state=' + state.code"
+                                class="text-pink-400 hover:text-pink-300 transition-colors">
+                                View Leads <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </template>
+                {% if not stats %}
+                <tr>
+                    <td colspan="5" class="px-6 py-20 text-center text-gray-500">
+                        <i class="fas fa-database text-4xl mb-4 block"></i>
+                        No leads discovered yet. Start discovery to see reports.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

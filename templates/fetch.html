@@ -1,0 +1,563 @@
+{% extends 'base.html' %}
+
+{% block title %}Fetch New Leads - LeadGen Pro{% endblock %}
+{% block page_title %}Fetch &amp; Enrich Leads{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header Card -->
+    <div class="glass-dark rounded-3xl p-8 border border-white/10 shadow-2xl relative overflow-hidden mb-8">
+        <!-- Background Orbs -->
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-pink-500/20 rounded-full blur-[100px]"></div>
+        <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-[100px]"></div>
+
+        <div class="relative flex items-center gap-8">
+            <div
+                class="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-indigo-600 shadow-lg glow-pink">
+                <i class="fas fa-rocket text-4xl text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-4xl font-extrabold text-white tracking-tight">Lead Discovery <span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-indigo-400">Launchpad</span>
+                </h1>
+                <p class="text-gray-400 mt-2 text-lg">Automated 3-step pipeline: Intelligent Fetch → Owner Search → Deep
+                    Enrichment</p>
+                <div class="flex items-center gap-4 mt-4">
+                    <span
+                        class="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/20">
+                        <i class="fas fa-bolt mr-1"></i> Real-time Discovery
+                    </span>
+                    <span
+                        class="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full border border-blue-500/20">
+                        <i class="fas fa-shield-alt mr-1"></i> Verified Sources
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fetch Form -->
+    <div class="rounded-2xl bg-[#161638] p-8 border border-white/10" x-data="{ showLog: false, loading: false }">
+        <form id="scrapeForm" method="POST" action="{{ url_for('do_fetch') }}">
+
+            <!-- Pipeline Steps Info -->
+            <div class="mb-8 p-4 bg-white/5 rounded-xl border border-white/10">
+                <h4 class="font-semibold text-white mb-3">
+                    <i class="fas fa-project-diagram text-pink-400 mr-2"></i>Data Pipeline
+                </h4>
+                <div class="flex items-center gap-2 text-sm flex-wrap">
+                    <div
+                        class="flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-300 rounded-lg border border-blue-500/20">
+                        <i class="fas fa-download"></i>
+                        <span>Step 1: Fetch</span>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-600"></i>
+                    <div
+                        class="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-300 rounded-lg border border-green-500/20">
+                        <i class="fas fa-search"></i>
+                        <span>Step 2: Lookup</span>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-600"></i>
+                    <div
+                        class="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 text-purple-300 rounded-lg border border-purple-500/20">
+                        <i class="fas fa-user-check"></i>
+                        <span>Step 3: Enrich</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State Selection -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <h3 class="text-lg font-semibold text-white">
+                        <i class="fas fa-map-marker-alt text-pink-400 mr-2"></i>Select States
+                    </h3>
+                    <button type="button" id="selectAllStatesBtn"
+                        class="px-3 py-2 rounded-lg bg-pink-500/15 border border-pink-500/30 text-pink-300 text-sm font-semibold hover:bg-pink-500/25 transition-all">
+                        <i class="fas fa-check-double mr-1"></i>Select All States
+                    </button>
+                </div>
+                <div
+                    class="grid grid-cols-2 md:grid-cols-5 gap-3 max-h-96 overflow-y-auto p-4 bg-white/5 rounded-xl border border-white/10">
+                    {% for state_code in all_states %}
+                    <label class="relative group">
+                        <input type="checkbox" name="states" value="{{ state_code }}" {% if state_code in ['FL', 'DE'
+                            , 'CA' , 'TX' , 'NY' ] %}checked{% endif %} class="peer sr-only">
+                        <div
+                            class="flex flex-col items-center p-3 rounded-xl border-2 border-white/10 cursor-pointer 
+                                    group-hover:border-pink-500/50 peer-checked:border-pink-500 peer-checked:bg-pink-500/10 transition-all">
+                            <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 
+                                         peer-checked:bg-pink-500 text-sm font-bold text-gray-400 
+                                         peer-checked:text-white mb-1 transition-all group-hover:bg-white/10">
+                                {{ state_code }}
+                            </span>
+                            <span class="text-[10px] font-medium text-gray-500 text-center truncate w-full"
+                                title="{{ state_names.get(state_code, state_code) }}">
+                                {{ state_names.get(state_code, state_code) }}
+                            </span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Records per State -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-white mb-4">
+                    <i class="fas fa-sliders-h text-pink-400 mr-2"></i>Records per State
+                </h3>
+                <div class="flex items-center gap-6">
+                    <input type="range" name="limit" id="limit" min="5" max="100" step="5" value="20"
+                        class="flex-1 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                        oninput="document.getElementById('limitValue').textContent = this.value">
+                    <div class="flex items-center gap-2">
+                        <span id="limitValue" class="text-2xl font-bold text-pink-400">20</span>
+                        <span class="text-gray-400">records</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline Options -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-white mb-4">
+                    <i class="fas fa-globe text-pink-400 mr-2"></i>Pipeline Options
+                </h3>
+                <div class="space-y-3">
+                    <!-- Fetch Business Data -->
+                    <label
+                        class="flex items-center gap-3 p-4 rounded-xl border-2 border-white/10 hover:border-blue-500/40 cursor-pointer transition-all">
+                        <input type="checkbox" name="use_sec" value="on" checked
+                            class="w-5 h-5 rounded text-pink-500 focus:ring-pink-500">
+                        <div class="flex-1">
+                            <span class="font-medium text-white">Step 1: Fetch Business Data</span>
+                            <p class="text-sm text-gray-400 mt-0.5">Get business names, addresses, phone numbers, and
+                                company information from public registration databases</p>
+                        </div>
+                        <span
+                            class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs font-medium rounded border border-blue-500/20 shrink-0">Required</span>
+                    </label>
+
+                    <!-- Owner Lookup -->
+                    <label
+                        class="flex items-center gap-3 p-4 rounded-xl border-2 border-white/10 hover:border-green-500/40 cursor-pointer transition-all">
+                        <input type="checkbox" name="use_serper" value="on" {{ 'checked' if serper_configured else '' }}
+                            class="w-5 h-5 rounded text-green-500 focus:ring-green-500">
+                        <div class="flex-1">
+                            <span class="font-medium text-white">Step 2: Owner Lookup</span>
+                            <p class="text-sm text-gray-400 mt-0.5">Discover business owner names and company websites
+                                using intelligent web discovery</p>
+                            {% if not serper_configured %}
+                            <p class="text-xs text-orange-400 mt-1"><i
+                                    class="fas fa-exclamation-triangle mr-1"></i>Option not available - configuration
+                                needed</p>
+                            {% endif %}
+                        </div>
+                        <span
+                            class="px-2 py-1 bg-green-500/20 text-green-300 text-xs font-medium rounded border border-green-500/20 shrink-0">Optional</span>
+                    </label>
+
+                    <!-- Contact Enrichment -->
+                    <label
+                        class="flex items-center gap-3 p-4 rounded-xl border-2 border-white/10 hover:border-purple-500/40 cursor-pointer transition-all">
+                        <input type="checkbox" name="use_apify" value="on" {{ 'checked' if apify_configured else '' }}
+                            class="w-5 h-5 rounded text-purple-500 focus:ring-purple-500">
+                        <div class="flex-1">
+                            <span class="font-medium text-white">Step 3: Contact Enrichment</span>
+                            <p class="text-sm text-gray-400 mt-0.5">Get emails, phone numbers, and detailed contact
+                                information for business owners</p>
+                            {% if not apify_configured %}
+                            <p class="text-xs text-orange-400 mt-1"><i
+                                    class="fas fa-exclamation-triangle mr-1"></i>Option not available - configuration
+                                needed</p>
+                            {% endif %}
+                        </div>
+                        <span
+                            class="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs font-medium rounded border border-purple-500/20 shrink-0">Optional</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end">
+                <button type="submit" id="fetchBtn" :disabled="loading" class="px-8 py-4 gradient-pink-blue text-white rounded-xl 
+                               hover:opacity-90 transition-all font-semibold text-lg
+                               shadow-lg glow-pink disabled:opacity-50 disabled:cursor-not-allowed
+                               flex items-center gap-3">
+                    <template x-if="!loading">
+                        <span><i class="fas fa-rocket mr-2"></i>Fetch &amp; Enrich Leads</span>
+                    </template>
+                    <template x-if="loading">
+                        <span class="flex items-center gap-2">
+                            <div class="spinner"></div>
+                            Processing Pipeline...
+                        </span>
+                    </template>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ================================================================
+         LIVE SCRAPE LOG PANEL
+         Appears immediately when the user clicks "Fetch & Enrich Leads".
+         Streams real-time log messages from the server via SSE.
+         ================================================================ -->
+    <div id="logPanel" x-show="showLog" x-cloak class="rounded-2xl border border-green-500/30 shadow-2xl overflow-hidden mb-12">
+        <!-- Panel header -->
+        <div class="flex items-center justify-between px-5 py-3 bg-[#0a1a0a] border-b border-green-500/20">
+            <div class="flex items-center gap-3">
+                <span id="logStatusDot"
+                    class="inline-block w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span>
+                <span class="text-green-400 font-semibold text-sm tracking-wide uppercase">
+                    <i class="fas fa-terminal mr-1"></i> Live Scrape Log
+                </span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="logCount"
+                    class="text-green-600 text-xs font-mono">0 lines</span>
+                <button id="clearLogBtn" onclick="document.getElementById('logLines').innerHTML=''"
+                    class="text-green-700 hover:text-green-400 text-xs transition-colors" title="Clear log">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Log body: black bg, light green 16px italic -->
+        <div id="logLines"
+            style="
+                background: #000;
+                color: #7dff7d;
+                font-size: 16px;
+                font-style: italic;
+                font-family: 'Courier New', Courier, monospace;
+                line-height: 1.6;
+                height: 360px;
+                overflow-y: auto;
+                padding: 16px 20px;
+                display: flex;
+                flex-direction: column-reverse;
+            ">
+            <!-- lines are prepended here by JS -->
+        </div>
+
+        <!-- Status bar -->
+        <div id="logFooter"
+            class="flex items-center gap-2 px-5 py-2 bg-[#050f05] border-t border-green-500/20 text-xs text-green-700 font-mono">
+            <i class="fas fa-circle-notch fa-spin mr-1 text-green-500"></i>
+            <span id="logStatus">Connecting to pipeline stream...</span>
+        </div>
+    </div>
+
+    <!-- Scraper Pipeline Results -->
+    {% if last_results or last_state_results %}
+    <div class="rounded-2xl glass-dark p-8 shadow-2xl border border-white/10 animate-fade-in" id="results-panel">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/20 text-green-400">
+                    <i class="fas fa-terminal text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white">Pipeline Results</h3>
+                    <p class="text-gray-400 text-sm">Last Run: {{ last_fetch_time or 'Just now' }}</p>
+                </div>
+            </div>
+            <a href="{{ url_for('leads') }}"
+                class="px-5 py-2 gradient-pink-blue text-white rounded-lg transition-all flex items-center gap-2 text-sm font-semibold shadow-lg">
+                <i class="fas fa-table"></i>
+                View All Leads
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Summary Stats -->
+            <div class="space-y-4">
+                <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">State-by-State Breakdown</h4>
+                <div class="space-y-2 max-h-80 overflow-y-auto pr-2">
+                    {% if last_state_results %}
+                    {% for state, data in last_state_results.items() %}
+                    <div
+                        class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-pink-500/30 transition-all">
+                        <div class="flex items-center gap-3">
+                            <span
+                                class="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-500/20 text-pink-400 font-bold text-xs uppercase">
+                                {{ state }}
+                            </span>
+                            <span class="text-gray-200 font-medium">{{ state_names.get(state, state) }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 rounded-md bg-green-500/10 text-green-400 text-xs font-bold">
+                                {{ data.get('count', 0) }} leads
+                            </span>
+                            {% if data.get('count', 0) > 0 %}
+                            <i class="fas fa-check-circle text-green-500 text-xs"></i>
+                            {% else %}
+                            <i class="fas fa-exclamation-triangle text-orange-400 text-xs"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-gray-500 italic text-sm">No state-specific data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pipeline Events -->
+            <div class="space-y-4">
+                <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Pipeline Events</h4>
+                <div
+                    class="p-4 rounded-xl bg-[#0a0a1a] border border-white/5 font-mono text-xs text-gray-300 space-y-2 h-80 overflow-y-auto">
+                    {% if last_results %}
+                    {% for result in last_results %}
+                    <div class="flex gap-3">
+                        <span class="text-pink-500">[{{ loop.index }}]</span>
+                        <span
+                            class="{{ 'text-green-400' if 'Found' in result or 'leads' in result else 'text-gray-400' }}">
+                            {{ result }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-gray-500 italic">No events logged for last run.</div>
+                    {% endif %}
+                    <div class="pt-2 text-pink-400 animate-pulse">
+                        <i class="fas fa-caret-right mr-1"></i> Pipeline execution complete.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Info Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-xl bg-blue-500/10 p-5 border border-blue-500/20">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-download text-blue-400"></i>
+                <h4 class="font-semibold text-blue-300">Step 1: Fetch</h4>
+            </div>
+            <p class="text-sm text-blue-200/70">Collects business names, addresses, phone numbers, and company
+                information across multiple states from public registration databases.</p>
+        </div>
+
+        <div class="rounded-xl bg-green-500/10 p-5 border border-green-500/20">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-search text-green-400"></i>
+                <h4 class="font-semibold text-green-300">Step 2: Lookup</h4>
+            </div>
+            <p class="text-sm text-green-200/70">Searches for and finds business owner/founder names and company
+                websites using intelligent web discovery.</p>
+        </div>
+
+        <div class="rounded-xl bg-purple-500/10 p-5 border border-purple-500/20">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-user-check text-purple-400"></i>
+                <h4 class="font-semibold text-purple-300">Step 3: Enrich</h4>
+            </div>
+            <p class="text-sm text-purple-200/70">Enhances your lead data with additional contact details like emails,
+                phone numbers, and personal information.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================================================
+       SELECT-ALL STATES
+    ========================================================= */
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectAllBtn = document.getElementById('selectAllStatesBtn');
+        const stateCheckboxes = Array.from(document.querySelectorAll('input[name="states"]'));
+        if (!selectAllBtn || stateCheckboxes.length === 0) return;
+
+        function allStatesSelected() {
+            return stateCheckboxes.every((cb) => cb.checked);
+        }
+        function updateButtonLabel() {
+            selectAllBtn.innerHTML = allStatesSelected()
+                ? '<i class="fas fa-xmark mr-1"></i>Deselect All States'
+                : '<i class="fas fa-check-double mr-1"></i>Select All States';
+        }
+        selectAllBtn.addEventListener('click', function () {
+            const shouldSelectAll = !allStatesSelected();
+            stateCheckboxes.forEach((cb) => { cb.checked = shouldSelectAll; });
+            updateButtonLabel();
+        });
+        stateCheckboxes.forEach((cb) => cb.addEventListener('change', updateButtonLabel));
+        updateButtonLabel();
+    });
+
+    /* =========================================================
+       LIVE LOG PANEL  (SSE streaming)
+    ========================================================= */
+    (function () {
+        const form        = document.querySelector('#scrapeForm');
+        const panel       = document.getElementById('logPanel');
+        const logLines    = document.getElementById('logLines');
+        const logStatus   = document.getElementById('logStatus');
+        const logCount    = document.getElementById('logCount');
+        const logStatusDot = document.getElementById('logStatusDot');
+        const logFooter   = document.getElementById('logFooter');
+
+        if (!form) return;
+
+        let lineCount = 0;
+        let eventSource = null;
+
+        /* ---- helpers ---- */
+        function addLine(text, cls) {
+            lineCount++;
+            logCount.textContent = lineCount + ' lines';
+
+            const el = document.createElement('div');
+            el.textContent = text;
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-6px)';
+            el.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            if (cls) el.className = cls;
+
+            // prepend = newest at top (flex-direction column-reverse handles visual order)
+            logLines.prepend(el);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                });
+            });
+        }
+
+        function markDone() {
+            logStatusDot.classList.remove('animate-pulse', 'bg-green-400');
+            logStatusDot.classList.add('bg-blue-400');
+            logFooter.innerHTML =
+                '<div class="flex items-center justify-between w-full">' +
+                '  <span class="flex items-center gap-2"><i class="fas fa-check-circle text-blue-400"></i>' +
+                '  <span class="text-blue-400">Pipeline complete</span></span>' +
+                '  <div class="flex items-center gap-3">' +
+                '    <a href="/leads" class="px-4 py-1.5 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-lg transition-all">' +
+                '      <i class="fas fa-table mr-1"></i>View All Leads</a>' +
+                '    <a href="/logs" class="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 text-xs font-bold rounded-lg transition-all">' +
+                '      <i class="fas fa-scroll mr-1"></i>Full Logs</a>' +
+                '  </div>' +
+                '</div>';
+            logStatus.textContent = '';
+            // Re-enable the button so user can fetch again
+            var btn = document.getElementById('fetchBtn');
+            if (btn) btn.disabled = false;
+            try { Alpine.evaluate(form.closest('[x-data]'), 'loading = false'); } catch(ex) {}
+        }
+
+        function openStream(jobId) {
+            const url = '/fetch/stream/' + jobId;
+            eventSource = new EventSource(url, { withCredentials: true });
+
+            eventSource.onmessage = function (e) {
+                addLine(e.data);
+                logStatus.textContent = e.data.replace(/^\[.*?\]\s*/, '').substring(0, 80);
+            };
+
+            eventSource.addEventListener('done', function () {
+                markDone();
+                eventSource.close();
+            });
+
+            eventSource.onerror = function () {
+                // Connection closed by server is normal at end of pipeline
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    markDone();
+                } else {
+                    addLine('[!] Connection interrupted — reload the page for results.');
+                    logFooter.innerHTML =
+                        '<i class="fas fa-exclamation-triangle text-orange-400 mr-1"></i>' +
+                        '<span class="text-orange-400">Stream disconnected</span>';
+                }
+                eventSource.close();
+            };
+        }
+
+        /* ---- intercept form submit ---- */
+        form.addEventListener('submit', function (e) {
+            console.log('Form submission intercepted for logging hub...');
+            e.preventDefault();
+
+            // Close any existing SSE connection from a previous run
+            if (eventSource) {
+                try { eventSource.close(); } catch(ex) {}
+                eventSource = null;
+            }
+
+            // Set Alpine state if available
+            var alpineData = form.closest('[x-data]');
+            if (alpineData && alpineData.__x) { alpineData.__x.$data.showLog = true; alpineData.__x.$data.loading = true; }
+            try { Alpine.evaluate(alpineData, 'showLog = true; loading = true'); } catch(ex) {}
+
+            // Reset log panel completely for this new run
+            logLines.innerHTML = '';
+            lineCount = 0;
+            logCount.textContent = '0 lines';
+            logStatusDot.classList.remove('bg-blue-400', 'bg-red-400');
+            logStatusDot.classList.add('animate-pulse', 'bg-green-400');
+            logStatus.textContent = 'Connecting to pipeline stream...';
+            logFooter.innerHTML =
+                '<i class="fas fa-circle-notch fa-spin mr-1 text-green-500"></i>' +
+                '<span id="logStatus" class="text-green-700">Connecting to pipeline stream...</span>';
+
+            panel.style.display = '';
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            addLine('[--] Starting discovery pipeline...');
+
+            const formData = new FormData(form);
+
+            // POST to server, requesting JSON so we get the Job ID
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.text().then(function(text) {
+                        throw new Error('Server error (' + response.status + '): ' + text.substring(0, 200));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                const jobId = data.job_id;
+
+                if (jobId) {
+                    addLine('[--] Stream ID: ' + jobId + ' — opening live log...');
+                    openStream(jobId);
+                } else {
+                    addLine('[!] No stream ID in server response — cannot tail live logs.');
+                    markDone();
+                }
+                // NO auto-redirect: user stays on the page watching live logs
+                // until the pipeline finishes. Then action buttons appear.
+            })
+            .catch(function (err) {
+                addLine('[!] Fetch error: ' + err.message);
+                addLine('[--] This may mean the session expired. Try refreshing the page.');
+                logStatus.textContent = 'Error — see above';
+                logStatusDot.classList.remove('animate-pulse', 'bg-green-400');
+                logStatusDot.classList.add('bg-red-400');
+                // Re-enable the button
+                var btn = document.getElementById('fetchBtn');
+                if (btn) btn.disabled = false;
+                try { Alpine.evaluate(form.closest('[x-data]'), 'loading = false'); } catch(ex) {}
+            });
+
+            // Disable button to prevent double-submit
+            const btn = document.getElementById('fetchBtn');
+            if (btn) btn.disabled = true;
+        });
+    })();
+</script>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+{% endblock %}

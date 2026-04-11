@@ -1,0 +1,213 @@
+<!-- Sidebar content -->
+<div class="flex h-16 shrink-0 items-center">
+    <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl gradient-pink-blue flex items-center justify-center glow-pink">
+            <i class="fas fa-rocket text-white text-lg"></i>
+        </div>
+        <div>
+            <h2 class="text-lg font-bold text-white">LeadGen<span class="gradient-text-pink">Pro</span></h2>
+            <p class="text-xs text-gray-400">
+                {% if current_user.is_admin %}
+                <span class="text-purple-400"><i class="fas fa-crown text-yellow-400 mr-1"></i>Admin</span>
+                {% else %}
+                Business Tracker
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<nav class="flex flex-1 flex-col mt-4">
+    <ul role="list" class="flex flex-1 flex-col gap-y-5">
+
+        <!-- ── PRIMARY HUB ── -->
+        <li>
+            <a href="{{ url_for('fetch_leads') }}"
+               class="group flex gap-x-3 rounded-xl p-3 text-sm font-bold leading-6 items-center
+                      {% if request.endpoint in ('fetch_leads', 'do_fetch', 'fetch_report', 'fetch_log_stream') %}
+                      gradient-pink-blue text-white shadow-lg glow-pink
+                      {% else %}
+                      bg-pink-500/10 text-pink-300 border border-pink-500/30 hover:bg-pink-500/20 hover:text-white transition-all
+                      {% endif %}">
+                <i class="fas fa-rocket text-xl {% if request.endpoint not in ('fetch_leads','do_fetch','fetch_report','fetch_log_stream') %}text-pink-400{% endif %}"></i>
+                <span class="flex-1">Fetch Leads</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-pink-500/30 text-pink-200 font-semibold tracking-wide uppercase">Hub</span>
+            </a>
+        </li>
+
+        <!-- ── MAIN NAVIGATION ── -->
+        <li>
+            <div class="text-xs font-semibold leading-6 text-gray-500 uppercase tracking-wider mb-2">Main</div>
+            <ul role="list" class="-mx-2 space-y-1">
+                <li>
+                    <a href="{{ url_for('dashboard') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'dashboard' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-chart-pie text-lg {% if request.endpoint == 'dashboard' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('states_report') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'states_report' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-map-marked-alt text-lg {% if request.endpoint == 'states_report' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        States Report
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('leads') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'leads' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-list-ul text-lg {% if request.endpoint == 'leads' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        All Leads
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('enrich_page') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'enrich_page' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-magic text-lg {% if request.endpoint == 'enrich_page' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Discovery Lab
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('export_page') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'export_page' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-file-export text-lg {% if request.endpoint == 'export_page' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Export Data
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('domain_lookup_page') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'domain_lookup_page' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-globe text-lg {% if request.endpoint == 'domain_lookup_page' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Domain Lookup
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('app_logs_page') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'app_logs_page' %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-scroll text-lg {% if request.endpoint == 'app_logs_page' %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        App Logs
+                    </a>
+                </li>
+
+            </ul>
+        </li>
+
+        <!-- ── SCRAPERS ── -->
+        <li>
+            <div class="text-xs font-semibold leading-6 text-gray-500 uppercase tracking-wider mb-2">Scrapers</div>
+            <ul role="list" class="-mx-2 space-y-1">
+                <li>
+                    <a href="{{ url_for('florida_scraper') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint in ('florida_scraper',) %}
+                              bg-pink-500/10 text-pink-400 border border-pink-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-white/5 hover:text-pink-400
+                              {% endif %}">
+                        <i class="fas fa-sun text-lg {% if request.endpoint in ('florida_scraper',) %}text-pink-400{% else %}text-gray-500 group-hover:text-pink-400{% endif %}"></i>
+                        Florida Scraper
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Admin Section (Admins Only) -->
+        {% if current_user.is_admin %}
+        <li>
+            <div
+                class="text-xs font-semibold leading-6 text-purple-500/80 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fas fa-shield-alt text-yellow-500 text-xs"></i>Admin Controls
+            </div>
+            <ul role="list" class="-mx-2 space-y-1">
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'admin_dashboard' %}
+                              bg-purple-500/10 text-purple-400 border border-purple-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-purple-500/10 hover:text-purple-400
+                              {% endif %}">
+                        <i class="fas fa-tachometer-alt text-lg {% if request.endpoint == 'admin_dashboard' %}text-purple-400{% else %}text-gray-500 group-hover:text-purple-400{% endif %}"></i>
+                        Admin Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}#users" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              text-gray-300 hover:bg-purple-500/10 hover:text-purple-400">
+                        <i class="fas fa-users text-lg text-gray-500 group-hover:text-purple-400"></i>
+                        User Management
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('settings') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 
+                              {% if request.endpoint == 'settings' %}
+                              bg-purple-500/10 text-purple-400 border border-purple-500/20
+                              {% else %}
+                              text-gray-300 hover:bg-purple-500/10 hover:text-purple-400
+                              {% endif %}">
+                        <i class="fas fa-cog text-lg {% if request.endpoint == 'settings' %}text-purple-400{% else %}text-gray-500 group-hover:text-purple-400{% endif %}"></i>
+                        App Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('force_clear_cache') }}" class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-gray-300 hover:bg-emerald-500/10 hover:text-emerald-400">
+                        <i class="fas fa-sync-alt text-lg text-gray-500 group-hover:text-emerald-400"></i>
+                        Full App Refresh
+                    </a>
+                </li>
+            </ul>
+        </li>
+        {% endif %}
+
+
+
+        <!-- Account Section -->
+        <li class="mt-auto">
+            {% if not current_user.is_admin %}
+            <!-- Client-only: Refresh App Data link -->
+            <a href="{{ url_for('force_clear_cache') }}"
+                class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-gray-300 hover:bg-emerald-500/10 hover:text-emerald-400 mb-2">
+                <i class="fas fa-sync-alt text-lg text-gray-500 group-hover:text-emerald-400"></i>
+                Refresh App Data
+            </a>
+            <!-- Client-only: Settings link -->
+            <a href="{{ url_for('settings') }}"
+                class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-gray-300 hover:bg-white/5 hover:text-pink-400 mb-2">
+                <i class="fas fa-cog text-lg text-gray-500 group-hover:text-pink-400"></i>
+                Settings
+            </a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}"
+                class="group -mx-2 flex gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-gray-300 hover:bg-red-500/10 hover:text-red-400">
+                <i class="fas fa-sign-out-alt text-lg text-gray-500 group-hover:text-red-400"></i>
+                Sign Out
+            </a>
+        </li>
+    </ul>
+</nav>
