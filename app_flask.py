@@ -4796,7 +4796,11 @@ except ImportError:
 # Supported states for scraping (FL always active, others depend on multistate scraper)
 ACTIVE_SCRAPER_STATES = {'FL'}
 if MULTISTATE_AVAILABLE:
-    ACTIVE_SCRAPER_STATES.update({'GA', 'NY', 'PA', 'CA', 'TX'})
+    # 18 states total with scrapers
+    ACTIVE_SCRAPER_STATES.update({
+        'GA', 'NY', 'PA', 'CA', 'TX',  # Batch 1
+        'OH', 'NC', 'IL', 'NJ', 'VA', 'WA', 'AZ', 'MA', 'MI', 'TN', 'IN', 'CO'  # Batch 2
+    })
 
 # In-memory state for the SOS scraper
 _florida_scrape_state = {
