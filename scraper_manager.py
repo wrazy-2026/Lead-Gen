@@ -632,6 +632,8 @@ def initialize_sos_scrapers(manager: ScraperManager) -> None:
             DelawareScraper,
             NewYorkScraper,
             TexasScraper,
+            GeorgiaScraper,
+            IllinoisScraper,
         )
         from scrapers.florida_playwright_scraper import FloridaPlaywrightScraper
 
@@ -641,6 +643,8 @@ def initialize_sos_scrapers(manager: ScraperManager) -> None:
             'DE': DelawareScraper,
             'NY': NewYorkScraper,
             'TX': TexasScraper,
+            'GA': GeorgiaScraper,
+            'IL': IllinoisScraper,
         }
 
         logger.info(

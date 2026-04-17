@@ -53,6 +53,7 @@ from google_sheets import GoogleSheetsExporter, MockGoogleSheetsExporter, Google
 from scrapers.real_scrapers import (
     FloridaScraper, CaliforniaScraper, DelawareScraper, 
     NewYorkScraper, TexasScraper, SECEdgarScraper,
+    GeorgiaScraper, IllinoisScraper,
     get_real_scraper, ALL_US_STATES, StateSpecificEdgarScraper
 )
 from enrichment import get_enricher, BusinessEnricher, ApifySkipTraceEnricher

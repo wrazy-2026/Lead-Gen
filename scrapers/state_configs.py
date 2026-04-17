@@ -178,10 +178,13 @@ STATE_CONFIGS: Dict[str, StateSOSConfig] = {
         state_code="GA", state_name="Georgia",
         sos_url="https://ecorp.sos.ga.gov/BusinessSearch",
         search_endpoint="https://ecorp.sos.ga.gov/BusinessSearch",
-        search_strategy="date_search",
+        search_strategy="suffix_search",
         requires_js=True,
         rate_limit_delay=2.0,
-        notes="Georgia SOS — date-range search",
+        result_selector="table tr",
+        name_selector="td:nth-child(1)",
+        date_selector="td:nth-child(3)",
+        notes="Georgia SOS — requires Playwright (JS) — dedicated scraper",
     ),
     # ── HAWAII ──
     "HI": StateSOSConfig(
@@ -204,11 +207,14 @@ STATE_CONFIGS: Dict[str, StateSOSConfig] = {
     # ── ILLINOIS ──
     "IL": StateSOSConfig(
         state_code="IL", state_name="Illinois",
-        sos_url="https://www.ilsos.gov/corporatellc/CorporateLlcController",
-        search_endpoint="https://www.ilsos.gov/corporatellc/CorporateLlcController",
-        search_strategy="date_search",
+        sos_url="https://apps.ilsos.gov/corporatellc/",
+        search_endpoint="https://apps.ilsos.gov/corporatellc/CorporateLlcController",
+        search_strategy="suffix_search",
         rate_limit_delay=2.0,
-        notes="Illinois SOS — date-range search",
+        result_selector="table tr",
+        name_selector="td:nth-child(1)",
+        date_selector="td:nth-child(3)",
+        notes="Illinois SOS — Java servlet form POST — dedicated scraper",
     ),
     # ── INDIANA ──
     "IN": StateSOSConfig(

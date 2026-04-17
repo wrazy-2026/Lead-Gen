@@ -455,6 +455,366 @@ class TexasScraper(RealScraperBase):
 
 
 # ============================================================================
+# Georgia SOS Scraper (Playwright-based)
+# ============================================================================
+
+class GeorgiaScraper(RealScraperBase):
+    """
+    Georgia Secretary of State business scraper using Playwright.
+
+    The GA SOS portal at ecorp.sos.ga.gov requires JavaScript rendering
+    and has anti-bot protections. Uses Playwright with stealth mode.
+    """
+
+    def __init__(self):
+        super().__init__(
+            "Georgia",
+            "GA",
+            "https://ecorp.sos.ga.gov/BusinessSearch"
+        )
+        self.search_url = "https://ecorp.sos.ga.gov/BusinessSearch"
+
+    def is_available(self) -> bool:
+        try:
+            from playwright.sync_api import sync_playwright
+            return True
+        except ImportError:
+            return False
+
+    def fetch_new_businesses(self, limit: int = 50) -> List[BusinessRecord]:
+        """Fetch recently filed businesses from Georgia SOS via Playwright."""
+        try:
+            from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+        except ImportError:
+            self.logger.warning("Playwright not installed — falling back to OpenCorporates for GA")
+            return self._fallback_opencorporates(limit)
+
+        try:
+            from playwright_stealth import Stealth
+            stealth_available = True
+        except ImportError:
+            stealth_available = False
+
+        records = []
+        # Trade-related search terms to find local service businesses
+        search_terms = [
+            "Services", "Plumbing", "Roofing", "Construction", "Electric",
+            "Cleaning", "Landscaping", "HVAC", "Painting", "Concrete",
+            "Fencing", "Flooring", "Repair", "Maintenance", "Remodeling",
+        ]
+        random.shuffle(search_terms)
+        seen_names = set()
+
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=[
+                        '--disable-blink-features=AutomationControlled',
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                    ]
+                )
+                context = browser.new_context(
+                    user_agent=get_random_ua(),
+                    viewport={"width": 1920, "height": 1080},
+                    locale="en-US",
+                )
+                page = context.new_page()
+                if stealth_available:
+                    Stealth().use_sync(page)
+
+                for term in search_terms:
+                    if len(records) >= limit:
+                        break
+                    try:
+                        page.goto(self.search_url, wait_until="domcontentloaded", timeout=30000)
+                        time.sleep(1)
+
+                        # Fill the business name search field
+                        name_input = page.query_selector('input[name="SearchName"], input[name="businessName"], input#SearchName, input[type="text"]')
+                        if not name_input:
+                            self.logger.debug(f"[GA] Could not find search input for term '{term}'")
+                            continue
+                        name_input.fill(term)
+
+                        # Click search button
+                        submit_btn = page.query_selector('input[type="submit"], button[type="submit"], button:has-text("Search"), input[value="Search"]')
+                        if submit_btn:
+                            submit_btn.click()
+                        else:
+                            name_input.press("Enter")
+
+                        page.wait_for_load_state("domcontentloaded", timeout=15000)
+                        time.sleep(2)
+
+                        html = page.content()
+                        soup = BeautifulSoup(html, "html.parser")
+
+                        # Parse result table rows
+                        rows = []
+                        for table in soup.find_all("table"):
+                            rows = table.find_all("tr")[1:]  # skip header
+                            if rows:
+                                break
+                        # Fallback: look for result divs
+                        if not rows:
+                            rows = soup.select("div.search-result, div.result-item, div.entity-row, li.result")
+
+                        for row in rows:
+                            if len(records) >= limit:
+                                break
+                            try:
+                                cells = row.find_all("td") if row.name == "tr" else []
+                                if cells and len(cells) >= 2:
+                                    name_el = cells[0].find("a") or cells[0]
+                                    name = name_el.get_text(strip=True)
+                                    link = name_el.get("href", "") if name_el.name == "a" else ""
+                                    if link and not link.startswith("http"):
+                                        link = f"https://ecorp.sos.ga.gov{link}"
+
+                                    date_str = ""
+                                    for cell in cells[1:]:
+                                        text = cell.get_text(strip=True)
+                                        date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2})', text)
+                                        if date_match:
+                                            date_str = self._parse_date(date_match.group(1))
+                                            break
+                                else:
+                                    # Div-based result
+                                    name_el = row.find(["a", "span", "strong"])
+                                    if not name_el:
+                                        continue
+                                    name = name_el.get_text(strip=True)
+                                    link = name_el.get("href", "") if name_el.name == "a" else ""
+                                    if link and not link.startswith("http"):
+                                        link = f"https://ecorp.sos.ga.gov{link}"
+                                    date_str = ""
+
+                                if not name or len(name) < 3:
+                                    continue
+
+                                key = name.strip().upper()
+                                if key in seen_names:
+                                    continue
+                                seen_names.add(key)
+
+                                records.append(BusinessRecord(
+                                    business_name=name,
+                                    filing_date=date_str or datetime.datetime.now().strftime("%Y-%m-%d"),
+                                    state="GA",
+                                    status="Active",
+                                    url=link or self.search_url,
+                                    entity_type=self._extract_entity_type(name),
+                                ))
+                            except Exception:
+                                continue
+
+                    except Exception as e:
+                        self.logger.debug(f"[GA] Search term '{term}' error: {e}")
+                        continue
+
+                browser.close()
+
+        except Exception as e:
+            self.logger.error(f"[GA] Playwright scraping failed: {e}")
+
+        # If Playwright yielded nothing, fall back to OpenCorporates
+        if not records:
+            self.logger.info("[GA] Playwright returned 0 — falling back to OpenCorporates")
+            records = self._fallback_opencorporates(limit)
+
+        self.logger.info(f"[GA] Scraped {len(records)} records total")
+        return records[:limit]
+
+    def _fallback_opencorporates(self, limit: int) -> List[BusinessRecord]:
+        """Fallback to OpenCorporates for GA businesses."""
+        try:
+            oc = OpenCorporatesScraper()
+            return oc.fetch_new_businesses(limit=limit, jurisdiction="us_ga")
+        except Exception as e:
+            self.logger.warning(f"[GA] OpenCorporates fallback failed: {e}")
+            return []
+
+    @staticmethod
+    def _extract_entity_type(name: str) -> str:
+        upper = name.upper()
+        if "LLC" in upper:
+            return "LLC"
+        elif "INC" in upper or "INCORPORATED" in upper:
+            return "Corporation"
+        elif "CORP" in upper:
+            return "Corporation"
+        elif "LP" in upper or "L.P." in upper:
+            return "Limited Partnership"
+        elif "LLP" in upper:
+            return "LLP"
+        return "Unknown"
+
+
+# ============================================================================
+# Illinois SOS Scraper (HTTP-based with proper form parameters)
+# ============================================================================
+
+class IllinoisScraper(RealScraperBase):
+    """
+    Illinois Secretary of State Corporation/LLC scraper.
+
+    The IL SOS at apps.ilsos.gov/corporatellc uses a Java servlet controller
+    that accepts POST requests with specific command parameters.
+    """
+
+    def __init__(self):
+        super().__init__(
+            "Illinois",
+            "IL",
+            "https://apps.ilsos.gov/corporatellc/"
+        )
+        self.search_url = "https://apps.ilsos.gov/corporatellc/CorporateLlcController"
+
+    def is_available(self) -> bool:
+        try:
+            resp = self.session.head(self.search_url, timeout=10)
+            return resp.status_code < 500
+        except Exception:
+            return True  # Assume available, will fail gracefully
+
+    def fetch_new_businesses(self, limit: int = 50) -> List[BusinessRecord]:
+        """Fetch businesses from Illinois SOS via form POST."""
+        records = []
+        seen_names = set()
+
+        # Trade-related search terms for local service businesses
+        search_terms = [
+            "Services", "Plumbing", "Roofing", "Construction", "Electric",
+            "Cleaning", "Landscaping", "HVAC", "Painting", "Concrete",
+            "Fencing", "Flooring", "Repair", "Maintenance", "Remodeling",
+            "Contracting", "Heating", "Cooling", "Paving", "Demolition",
+        ]
+        random.shuffle(search_terms)
+
+        for term in search_terms:
+            if len(records) >= limit:
+                break
+            try:
+                batch = self._search_il_sos(term, max_results=min(limit - len(records), 25))
+                for rec in batch:
+                    key = (rec.business_name or "").strip().upper()
+                    if key and key not in seen_names:
+                        seen_names.add(key)
+                        records.append(rec)
+            except Exception as e:
+                self.logger.debug(f"[IL] Search term '{term}' error: {e}")
+                continue
+
+        # If HTTP scraping yielded nothing, fall back to OpenCorporates
+        if not records:
+            self.logger.info("[IL] SOS search returned 0 — falling back to OpenCorporates")
+            try:
+                oc = OpenCorporatesScraper()
+                records = oc.fetch_new_businesses(limit=limit, jurisdiction="us_il")
+            except Exception as e:
+                self.logger.warning(f"[IL] OpenCorporates fallback failed: {e}")
+
+        self.logger.info(f"[IL] Scraped {len(records)} records total")
+        return records[:limit]
+
+    def _search_il_sos(self, name: str, max_results: int = 25) -> List[BusinessRecord]:
+        """Search the IL SOS CorporateLlcController with proper form params."""
+        records = []
+
+        headers = get_browser_headers(referer="https://apps.ilsos.gov/corporatellc/")
+        headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+        # IL SOS expects these specific POST parameters
+        form_data = {
+            "command": "GETRESULTS",
+            "search_type": "name",
+            "name_search_type": "begins",
+            "entity_name": name,
+            "name_type": "entity",
+        }
+
+        resp = self._make_request(
+            self.search_url,
+            method="POST",
+            data=form_data,
+            headers=headers,
+        )
+
+        if not resp or resp.status_code != 200:
+            # Try alternate parameter format
+            form_data_alt = {
+                "command": "searchByName",
+                "searchType": "name",
+                "searchValue": name,
+                "entityName": name,
+            }
+            resp = self._make_request(
+                self.search_url,
+                method="POST",
+                data=form_data_alt,
+                headers=headers,
+            )
+            if not resp or resp.status_code != 200:
+                return []
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        # Look for result tables
+        for table in soup.find_all("table"):
+            rows = table.find_all("tr")[1:]  # skip header
+            for row in rows:
+                if len(records) >= max_results:
+                    break
+                cells = row.find_all("td")
+                if len(cells) < 2:
+                    continue
+
+                name_text = cells[0].get_text(strip=True)
+                if not name_text or len(name_text) < 3:
+                    continue
+
+                link_el = cells[0].find("a")
+                url = ""
+                if link_el and link_el.get("href"):
+                    href = link_el["href"]
+                    if not href.startswith("http"):
+                        url = f"https://apps.ilsos.gov{href}" if href.startswith("/") else f"https://apps.ilsos.gov/corporatellc/{href}"
+                    else:
+                        url = href
+
+                date_str = ""
+                for cell in cells[1:]:
+                    text = cell.get_text(strip=True)
+                    date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2})', text)
+                    if date_match:
+                        date_str = self._parse_date(date_match.group(1))
+                        break
+
+                entity_type = None
+                for cell in cells:
+                    text = cell.get_text(strip=True).upper()
+                    if any(t in text for t in ["LLC", "CORP", "INC", "LP", "LLP"]):
+                        entity_type = text
+                        break
+
+                records.append(BusinessRecord(
+                    business_name=name_text,
+                    filing_date=date_str or datetime.datetime.now().strftime("%Y-%m-%d"),
+                    state="IL",
+                    status="Active",
+                    url=url or self.search_url,
+                    entity_type=entity_type,
+                ))
+            if records:
+                break
+
+        return records
+
+
+# ============================================================================
 # OpenCorporates API (Free tier available - NO API KEY REQUIRED)
 # ============================================================================
 
@@ -1385,6 +1745,8 @@ REAL_SCRAPERS = {
     'DE': DelawareScraper,
     'NY': NewYorkScraper,
     'TX': TexasScraper,
+    'GA': GeorgiaScraper,
+    'IL': IllinoisScraper,
 }
 
 # All US state codes for sample data generation

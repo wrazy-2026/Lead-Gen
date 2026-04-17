@@ -42,6 +42,8 @@ try:
         OpenCorporatesScraper, 
         SECEdgarScraper,
         StateSpecificEdgarScraper,
+        GeorgiaScraper,
+        IllinoisScraper,
         get_real_scraper,
         get_available_states
     )
